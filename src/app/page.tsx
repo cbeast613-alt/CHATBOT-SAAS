@@ -1,65 +1,265 @@
-import Image from "next/image";
+import Link from "next/link";
+import ChatWidget from "@/components/ChatWidget";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-[#09090b] text-white font-outfit selection:bg-orange-500/30 selection:text-orange-200">
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-20 items-center">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
+              <span className="text-xl font-bold tracking-tight text-zinc-100 group-hover:text-white transition-colors">
+                ChatBot SaaS
+              </span>
+            </Link>
+            
+            <div className="hidden md:flex items-center space-x-10 text-sm font-medium text-zinc-400">
+              <Link href="#features" className="hover:text-white transition-colors">Features</Link>
+              <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+              <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
+              <Link href="/auth" className="text-zinc-100 font-semibold hover:text-white transition-colors">Login</Link>
+              <Link href="/auth" className="bg-orange-500 text-white px-6 py-2.5 rounded-full font-bold hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)]">
+                Get Started
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </nav>
+
+      <main className="relative">
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-24 overflow-hidden lg:pt-48 lg:pb-40">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
+            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[140px] animate-pulse"></div>
+            <div className="absolute bottom-[0%] right-[-5%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]"></div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div className="inline-flex items-center space-x-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-1.5 rounded-full text-xs font-bold mb-8 uppercase tracking-widest">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+              </span>
+              <span>The Future of Customer Support</span>
+            </div>
+            
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white mb-8 leading-[0.9] lg:max-w-5xl lg:mx-auto">
+              Turn your website into a <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
+                24/7 Sales Engine
+              </span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+              Automate support, capture leads, and boost sales with AI chatbots that speak English, Hindi, and Hinglish. Starts at just ₹99/month.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <Link href="/auth" className="w-full sm:w-auto bg-orange-500 text-white px-10 py-5 rounded-2xl text-lg font-bold hover:bg-orange-600 transition-all shadow-[0_20px_40px_rgba(249,115,22,0.2)] hover:-translate-y-1 active:scale-95">
+                Start Free Trial
+              </Link>
+              <Link href="#demo" className="w-full sm:w-auto bg-zinc-900 text-white border border-zinc-800 px-10 py-5 rounded-2xl text-lg font-bold hover:bg-zinc-800 transition-all flex items-center justify-center space-x-3">
+                <span>View Live Demo</span>
+                <span className="text-orange-500">→</span>
+              </Link>
+            </div>
+
+            {/* Trusted by Section */}
+            <div className="mt-32 pt-16 border-t border-zinc-800/30">
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.3em] mb-12">Trusted by 500+ Indian Businesses</p>
+              <div className="flex flex-wrap justify-center items-center gap-16 opacity-30 grayscale contrast-125">
+                <span className="text-2xl font-black tracking-tighter">SHOPIFY</span>
+                <span className="text-2xl font-black tracking-tighter">WOO</span>
+                <span className="text-2xl font-black tracking-tighter">WORDPRESS</span>
+                <span className="text-2xl font-black tracking-tighter">WIX</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-32 bg-[#0c0c0e] relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-24">
+              <h2 className="text-3xl md:text-6xl font-black text-white mb-6 tracking-tight">Built for Growth</h2>
+              <p className="text-zinc-500 max-w-2xl mx-auto text-lg font-medium">Powerful features that help you scale without adding head-count.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: "Multilingual AI",
+                  desc: "Supports English, Hindi, and Hinglish. Automatically detects user language and responds fluently.",
+                  icon: "🗣️"
+                },
+                {
+                  title: "WhatsApp Sync",
+                  desc: "Connect your AI chatbot to WhatsApp Business. Chat with customers where they are most comfortable.",
+                  icon: "📱"
+                },
+                {
+                  title: "Lead Generation",
+                  desc: "Automatically collect names, phone numbers, and emails. Sync directly to your CRM or Google Sheets.",
+                  icon: "📈"
+                },
+                {
+                  title: "Instant Setup",
+                  desc: "Just paste one line of code. Works with WordPress, Wix, Shopify, or any custom-built website.",
+                  icon: "⚡"
+                },
+                {
+                  title: "Local Payments",
+                  desc: "Pay in ₹ via UPI, PhonePe, GPay, or Paytm. Transparent INR pricing with no hidden fees.",
+                  icon: "💳"
+                },
+                {
+                  title: "White-labeling",
+                  desc: "Remove our branding and use your own logo. Perfect for agencies managing multiple clients.",
+                  icon: "🏢"
+                }
+              ].map((f, i) => (
+                <div key={i} className="bg-zinc-900/30 border border-zinc-800/50 p-10 rounded-[2.5rem] hover:bg-zinc-900/50 transition-all group relative overflow-hidden">
+                  <div className="text-5xl mb-8 group-hover:scale-110 transition-transform duration-500">
+                    {f.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">{f.title}</h3>
+                  <p className="text-zinc-500 leading-relaxed font-medium">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-32 relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-24">
+              <h2 className="text-3xl md:text-6xl font-black text-white mb-6 tracking-tight">Simple Pricing</h2>
+              <p className="text-zinc-500 max-w-2xl mx-auto text-lg font-medium">No hidden costs. Scale your plan as you grow your business.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {[
+                {
+                  name: "Starter",
+                  price: "99",
+                  desc: "Perfect for blogs and personal projects.",
+                  features: ["300 Messages/month", "Standard AI (Flash)", "Email Support", "Branding Included"],
+                  cta: "Get Started",
+                  popular: false
+                },
+                {
+                  name: "Growth",
+                  price: "499",
+                  desc: "Best for growing stores & SMEs.",
+                  features: ["Unlimited Messages*", "Pro AI (Gemini Pro)", "WhatsApp Sync", "No Branding", "Lead Capture"],
+                  cta: "Start Free Trial",
+                  popular: true
+                },
+                {
+                  name: "Agency",
+                  price: "1,999",
+                  desc: "For multi-client management.",
+                  features: ["All Growth Features", "White-label Dashboard", "Sub-accounts", "Priority Support", "Bulk Allocation"],
+                  cta: "Contact Us",
+                  popular: false
+                }
+              ].map((plan, i) => (
+                <div key={i} className={`relative p-10 rounded-[3rem] border transition-all flex flex-col ${
+                  plan.popular 
+                    ? 'bg-zinc-900 border-orange-500/50 shadow-[0_40px_80px_rgba(249,115,22,0.1)] scale-105 z-10' 
+                    : 'bg-zinc-900/30 border-zinc-800/50 hover:bg-zinc-900/50'
+                }`}>
+                  {plan.popular && (
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-500/20">
+                      Most Popular
+                    </span>
+                  )}
+                  <div className="mb-10">
+                    <h3 className="text-2xl font-bold text-white mb-3">{plan.name}</h3>
+                    <p className="text-zinc-500 text-sm font-medium">{plan.desc}</p>
+                  </div>
+                  <div className="flex items-baseline mb-10">
+                    <span className="text-5xl font-black text-white tracking-tighter">₹{plan.price}</span>
+                    <span className="text-zinc-500 ml-2 font-bold">/mo</span>
+                  </div>
+                  <ul className="space-y-5 mb-12 flex-1">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className="flex items-center text-sm text-zinc-400 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-orange-500/10 flex items-center justify-center mr-4">
+                          <svg className="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </div>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/auth" className="block w-full">
+                    <button className={`w-full py-5 rounded-2xl font-black transition-all ${
+                      plan.popular 
+                        ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-xl shadow-orange-500/20' 
+                        : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                    }`}>
+                      {plan.cta}
+                    </button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-black text-zinc-500 py-24 border-t border-zinc-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-4 gap-16 mb-20">
+              <div className="col-span-2">
+                <Link href="/" className="flex items-center space-x-3 mb-8">
+                  <div className="w-2.5 h-2.5 bg-orange-500 rounded-full"></div>
+                  <span className="text-xl font-bold tracking-tight text-white">ChatBot SaaS</span>
+                </Link>
+                <p className="max-w-xs leading-relaxed font-medium">
+                  The first AI chatbot platform built specifically for the unique needs of Indian businesses.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Product</h4>
+                <ul className="space-y-5 font-medium">
+                  <li><Link href="#features" className="hover:text-orange-500 transition-colors">Features</Link></li>
+                  <li><Link href="#pricing" className="hover:text-orange-500 transition-colors">Pricing</Link></li>
+                  <li><Link href="/auth" className="hover:text-orange-500 transition-colors">Dashboard</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Legal</h4>
+                <ul className="space-y-5 font-medium">
+                  <li><Link href="#" className="hover:text-orange-500 transition-colors">Privacy</Link></li>
+                  <li><Link href="#" className="hover:text-orange-500 transition-colors">Terms</Link></li>
+                  <li><Link href="#" className="hover:text-orange-500 transition-colors">GDPR</Link></li>
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-zinc-900 pt-12 flex flex-col md:flex-row justify-between items-center text-xs font-bold uppercase tracking-widest text-zinc-700">
+              <p>© 2026 ChatBot SaaS Technologies. All rights reserved.</p>
+              <div className="mt-8 md:mt-0 flex items-center space-x-2">
+                <span>Made in India</span>
+                <span className="text-base">🇮🇳</span>
+              </div>
+            </div>
+          </div>
+        </footer>
       </main>
+
+      <ChatWidget
+        tenantId="demo"
+        primaryColor="#f97316"
+        botName="ChatBot SaaS"
+        isPreview={true}
+      />
     </div>
   );
 }
+
