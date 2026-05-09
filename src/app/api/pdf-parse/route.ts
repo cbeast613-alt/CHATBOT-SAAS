@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import pdfParse from "pdf-parse";
 
 export async function POST(request: Request) {
   try {
-    const pdf = require("pdf-parse");
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const data = await pdf(buffer);
+    const data = await pdfParse(buffer);
     
     const content = data.text
       .replace(/\s+/g, " ")
@@ -28,8 +28,9 @@ export async function POST(request: Request) {
       info: data.info,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("PDF parsing error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

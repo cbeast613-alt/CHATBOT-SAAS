@@ -38,8 +38,9 @@ export async function POST(request: Request) {
       content: truncatedContent,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Scraping error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

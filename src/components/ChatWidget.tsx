@@ -24,33 +24,23 @@ export default function ChatWidget({
   botName = "Assistant",
   isPreview = false,
 }: ChatWidgetProps) {
-  const [isOpen, setIsOpen] = useState(isPreview); 
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window !== "undefined" && isPreview && window.location.pathname.includes("/dashboard")) {
+      return true;
+    }
+    return isPreview;
+  });
+
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: welcomeMessage },
   ]);
 
-  // If we are on a page where the widget should be fixed (like home), 
-  // but it's a demo (isPreview), we might still want 'fixed'.
-  // We'll detect if we are in a 'relative' container or not.
-  const [isFixed, setIsFixed] = useState(true);
-
-  useEffect(() => {
-    // Simple check: if isPreview is true and we are in the dashboard, we probably want absolute.
-    // Otherwise fixed.
-    if (isPreview && typeof window !== "undefined" && window.location.pathname.includes("/dashboard")) {
-      setIsFixed(false);
+  const [isFixed] = useState(() => {
+    if (typeof window !== "undefined" && isPreview && window.location.pathname.includes("/dashboard")) {
+      return false;
     }
-  }, [isPreview]);
-
-  useEffect(() => {
-    setMessages([{ role: "assistant", content: welcomeMessage }]);
-  }, [welcomeMessage]);
-
-  useEffect(() => {
-    if (isPreview && typeof window !== "undefined" && window.location.pathname.includes("/dashboard")) {
-      setIsOpen(true);
-    }
-  }, [isPreview]);
+    return true;
+  });
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);

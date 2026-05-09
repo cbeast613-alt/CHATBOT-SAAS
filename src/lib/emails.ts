@@ -159,6 +159,7 @@ export async function sendUsageWarningEmail(
   limit: number,
   plan: string
 ) {
+  const planDisplay = plan.charAt(0).toUpperCase() + plan.slice(1);
   const resend = getResend();
   if (!resend) return;
 
@@ -177,7 +178,7 @@ export async function sendUsageWarningEmail(
     <div style="padding:40px 36px;">
       <h1 style="font-size:20px;color:#fff;margin:0 0 16px;font-weight:900;">Hi ${name}, your chatbot is nearly full</h1>
       <p style="color:#a1a1aa;font-size:16px;line-height:1.6;margin:0 0 24px;">
-        You've used <strong>${used} of ${limit} messages</strong> this month. 
+        You've used <strong>${used} of ${limit} messages</strong> this month on the ${planDisplay} plan. 
         Only <strong>${limit - used} messages left</strong> before your chatbot pauses.
       </p>
       <div style="background:#1e1e24;border-radius:12px;padding:20px;margin-bottom:32px;border:1px solid #27272a;">

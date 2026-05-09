@@ -20,7 +20,7 @@ const PLANS: { id: Plan; name: string; price: string; limit: number }[] = [
 
 export default function AuthPage() {
   const [tab, setTab] = useState<Tab>("login");
-  const [plan, setPlan] = useState<Plan>("growth");
+  const [plan, setPlan] = useState<Plan>("starter");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -37,8 +37,8 @@ export default function AuthPage() {
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
-      setMessage({ type: "success", text: "Welcome back! Redirecting to dashboard..." });
-      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
+      setMessage({ type: "success", text: "Welcome back! Redirecting..." });
+      setTimeout(() => { window.location.href = "/"; }, 1000);
     }
     setLoading(false);
   };
@@ -53,24 +53,17 @@ export default function AuthPage() {
         throw new Error("Please enter your business name.");
       }
 
-      const selectedPlan = PLANS.find((p) => p.id === plan)!;
+        const selectedPlan = PLANS.find((p) => p.id === plan) ?? PLANS[0];
 
-      // Call the new Server-Side Signup API
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          businessName: businessName.trim(),
-          plan,
-          messageLimit: selectedPlan.limit,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
+        // Call the new Server-Side Signup API
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            businessName: businessName.trim(),
+            plan: selectedPlan.id,
         throw new Error(data.error || "Signup failed.");
       }
 
@@ -90,14 +83,14 @@ export default function AuthPage() {
       // Auto-switch to login tab after success
       setTimeout(() => setTab("login"), 2500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Signup process failed:", err);
-      setMessage({ type: "error", text: err.message || "An unexpected error occurred." });
+      const message = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setMessage({ type: "error", text: message });
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-[#09090b] text-white font-outfit flex flex-col md:flex-row">
       {/* Left Side: Branding & Info */}
@@ -202,28 +195,6 @@ export default function AuthPage() {
               />
             </div>
 
-            {tab === "signup" && (
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Select Plan</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {PLANS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setPlan(p.id)}
-                      className={`p-4 rounded-2xl border text-left transition-all ${
-                        plan === p.id 
-                          ? "bg-orange-500/10 border-orange-500/50" 
-                          : "bg-zinc-900/30 border-zinc-800/50 hover:bg-zinc-900/50"
-                      }`}
-                    >
-                      <p className="text-xs font-bold text-white mb-1">{p.name}</p>
-                      <p className={`text-sm font-black ${plan === p.id ? "text-orange-500" : "text-zinc-500"}`}>{p.price}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <button
               type="submit"

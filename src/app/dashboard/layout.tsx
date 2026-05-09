@@ -67,6 +67,9 @@ export default function DashboardLayout({
             </span>
           </Link>
         </div>
+        <div className="px-6 pb-6 border-b border-zinc-800/50">
+          <p className="text-sm text-zinc-500">Hello, {userName}</p>
+        </div>
         
         <nav className="flex-1 px-4 mt-4 space-y-2">
           {menuItems.map((item) => {

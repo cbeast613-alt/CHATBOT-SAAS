@@ -28,7 +28,17 @@ export default function ConversationsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await supabase
+      type ConversationResult = {
+      id: string;
+      started_at: string;
+      messages: {
+        role: string;
+        content: string;
+        created_at: string;
+      }[];
+    }[];
+
+    const { data, error } = await supabase
         .from("conversations")
         .select(`
           id,
@@ -38,12 +48,10 @@ export default function ConversationsPage() {
             content,
             created_at
           )
-        `)
-        .eq("tenant_id", session.user.id)
-        .order("started_at", { ascending: false });
+        `) as { data: ConversationResult | null; error: unknown };
 
       if (data && !error) {
-        setConversations(data as any);
+        setConversations(data);
         if (data.length > 0) setSelectedId(data[0].id);
       }
       setLoading(false);

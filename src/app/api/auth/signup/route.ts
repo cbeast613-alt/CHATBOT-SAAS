@@ -8,9 +8,15 @@ const getSupabaseAdmin = () => {
   return createClient(url, key);
 };
 
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 300,
+  growth: 2000,
+  agency: 10000,
+};
+
 export async function POST(request: Request) {
   try {
-    const { email, password, businessName, plan, messageLimit } = await request.json();
+    const { email, password, businessName, plan = "starter", messageLimit } = await request.json();
 
     if (!email || !password || !businessName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -21,11 +27,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server configuration missing" }, { status: 500 });
     }
 
+    const selectedPlan = PLAN_LIMITS[plan] ? plan : "starter";
+    const selectedLimit = typeof messageLimit === "number" && messageLimit > 0
+      ? messageLimit
+      : PLAN_LIMITS[selectedPlan];
+
     // 1. Create the Auth User using Admin API (Bypasses confirmation for profile creation)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm so they can login immediately if desired
+      email_confirm: true,
       user_metadata: { business_name: businessName },
     });
 

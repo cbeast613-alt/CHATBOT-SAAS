@@ -2,7 +2,7 @@
 // src/app/dashboard/training/page.tsx
 // AI Training UI — Pre-filled with smart default data & Premium Dark Theme
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -157,7 +157,6 @@ export default function TrainingPage() {
   const [charCounts, setCharCounts] = useState<Record<string, number>>(
     Object.fromEntries(Object.entries(DEFAULT_DATA).map(([k, v]) => [k, v.length]))
   );
-  const testRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -209,9 +208,9 @@ export default function TrainingPage() {
       } else {
         throw new Error("Save failed");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err.message);
+      setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
     }
   };
 
@@ -235,9 +234,9 @@ export default function TrainingPage() {
       handleChange(activeSection, newVal);
       setStatus("idle");
       setUrlInput("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err.message);
+      setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
     }
   };
 
@@ -261,9 +260,9 @@ export default function TrainingPage() {
       const newVal = `${currentVal}\n\n--- Source: ${file.name} ---\n${result.content}`;
       handleChange(activeSection, newVal);
       setStatus("idle");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err.message);
+      setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
     }
   };
 

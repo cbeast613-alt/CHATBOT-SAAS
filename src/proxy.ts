@@ -2,6 +2,16 @@ import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+type CookieOptions = Partial<{
+  domain: string;
+  expires: Date;
+  httpOnly: boolean;
+  maxAge: number;
+  path: string;
+  sameSite: "lax" | "strict" | "none";
+  secure: boolean;
+}>;
+
 export async function proxy(req: NextRequest) {
   let res = NextResponse.next();
 
@@ -13,19 +23,19 @@ export async function proxy(req: NextRequest) {
         get(name: string) {
           return req.cookies.get(name)?.value;
         },
-        set(name: string, value: string, options: any) {
-          req.cookies.set({ name, value, ...options });
+        set(name: string, value: string, options: CookieOptions) {
+          req.cookies.set({ name, value, ...(options as Record<string, unknown>) });
           res = NextResponse.next({
             request: { headers: req.headers },
           });
-          res.cookies.set({ name, value, ...options });
+          res.cookies.set({ name, value, ...(options as Record<string, unknown>) });
         },
-        remove(name: string, options: any) {
-          req.cookies.set({ name, value: "", ...options });
+        remove(name: string, options: CookieOptions) {
+          req.cookies.set({ name, value: "", ...(options as Record<string, unknown>) });
           res = NextResponse.next({
             request: { headers: req.headers },
           });
-          res.cookies.set({ name, value: "", ...options });
+          res.cookies.set({ name, value: "", ...(options as Record<string, unknown>) });
         },
       },
     }
