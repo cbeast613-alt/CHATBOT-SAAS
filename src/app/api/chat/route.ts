@@ -3,6 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { sendUsageWarningEmail, sendBotPausedEmail } from "@/lib/emails";
 
+interface Tenant {
+  id: string;
+  business_name: string;
+  business_context: string;
+  is_active: boolean;
+  monthly_message_count: number;
+  monthly_message_limit: number;
+  plan: string;
+  email: string;
+  limit_reached_at?: string | null;
+}
+
 const getGenAI = () => {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
@@ -23,6 +35,8 @@ const SYSTEM_PROMPT = `You are a helpful AI assistant for an Indian business.
 - Keep responses concise and helpful.
 - If asked about pricing, mention amounts in Indian Rupees (₹).
 - You represent the business whose context is provided below.
+- IMPORTANT: Write naturally without excessive markdown formatting. Avoid using asterisks, bullet points, or numbered lists unless absolutely necessary. Keep responses conversational and easy to read.
+- Always provide complete answers to user questions. Never cut off mid-sentence.
 
 Business Context:
 {BUSINESS_CONTEXT}`;
@@ -52,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // --- Handle Demo Mode for Landing Page ---
-    let tenant: any = null;
+    let tenant: Tenant | null = null;
     if (tenantId === "demo") {
       tenant = {
         id: "demo",
@@ -61,7 +75,9 @@ export async function POST(request: Request) {
         is_active: true,
         monthly_message_count: 0,
         monthly_message_limit: 1000,
-        plan: "demo"
+        plan: "demo",
+        email: "demo@chatbotsaas.in",
+        limit_reached_at: null,
       };
     } else {
       const { data: tenantData, error: tenantError } = await supabase
@@ -101,11 +117,11 @@ export async function POST(request: Request) {
       const parsed = JSON.parse(tenant.business_context);
       if (typeof parsed === "object") {
         formattedContext = Object.entries(parsed)
-          .filter(([_, value]) => (value as string).trim())
+          .filter(([, value]) => (value as string).trim())
           .map(([key, value]) => `## ${key.toUpperCase()}\n${value}`)
           .join("\n\n");
       }
-    } catch (e) {
+    } catch {
       // Not JSON, use as-is
     }
 
@@ -127,19 +143,20 @@ export async function POST(request: Request) {
       chatHistory.shift();
     }
 
+    const getErrorMessage = (error: unknown) =>
+      error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown error";
+
     // --- Multi-model fallback chain ---
-    // Try models in order until one works (quota issues auto-handled)
+    // Prefer stable numeric Gemini models for this API version.
     const MODELS_TO_TRY = [
-      "gemini-1.5-flash-latest",
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-1.5-pro-latest",
-      "gemini-1.5-pro",
-      "gemini-2.0-flash-exp",
-      "gemini-pro",
     ];
 
     let responseText = "";
-    let lastError: any = null;
+    let lastError: unknown = null;
 
     for (const modelName of MODELS_TO_TRY) {
       try {
@@ -147,7 +164,7 @@ export async function POST(request: Request) {
           model: modelName,
           systemInstruction: systemPrompt,
           generationConfig: {
-            maxOutputTokens: 500,
+            maxOutputTokens: 2048,
             temperature: 0.7,
             topP: 0.9,
           },
@@ -156,14 +173,17 @@ export async function POST(request: Request) {
         const chat = model.startChat({ history: chatHistory });
         const result = await chat.sendMessage(message.trim());
         responseText = result.response.text();
+        console.log(`Chat API success using model ${modelName}`);
         break; // success — stop trying more models
-      } catch (err: any) {
+      } catch (err: unknown) {
         lastError = err;
-        const isQuotaErr = err.message?.includes("429") || err.message?.includes("quota") || err.message?.includes("404");
-        if (isQuotaErr) {
+        const errorMessage = getErrorMessage(err);
+        console.warn(`Chat API model ${modelName} failed:`, errorMessage);
+        const isRetryable = /429|503|quota|unavailable|404/i.test(errorMessage);
+        if (isRetryable) {
           continue; // try next model
         } else {
-          throw err; // non-quota error — stop immediately
+          throw err; // non-retryable error — stop immediately
         }
       }
     }
