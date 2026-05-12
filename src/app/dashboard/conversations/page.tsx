@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -14,7 +14,7 @@ interface Conversation {
   }[];
 }
 
-export default function ConversationsPage() {
+function ConversationsContent() {
   const searchParams = useSearchParams();
   const preselectedId = searchParams.get("id");
 
@@ -37,9 +37,6 @@ export default function ConversationsPage() {
         if (json.data) {
           setConversations(json.data);
           
-          // Selection logic:
-          // 1. If 'id' is in URL, select it and open mobile view
-          // 2. Otherwise, if desktop, select first item
           if (preselectedId && json.data.some((c: Conversation) => c.id === preselectedId)) {
             setSelectedId(preselectedId);
             if (window.innerWidth < 768) setIsMobileChatOpen(true);
@@ -78,8 +75,6 @@ export default function ConversationsPage() {
 
   return (
     <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden flex h-[calc(100vh-140px)] md:h-[calc(100vh-200px)] animate-in fade-in duration-700 relative">
-      
-      {/* ── SESSIONS LIST ── */}
       <div className={`w-full md:w-80 border-r border-zinc-800/50 flex flex-col bg-zinc-900/10 transition-all duration-300 ${
         isMobileChatOpen ? "-translate-x-full md:translate-x-0 hidden md:flex" : "translate-x-0 flex"
       }`}>
@@ -114,7 +109,6 @@ export default function ConversationsPage() {
         </div>
       </div>
 
-      {/* ── CHAT VIEW ── */}
       <div className={`flex-1 flex flex-col bg-zinc-950/20 transition-all duration-300 fixed inset-0 z-50 md:relative md:z-0 md:flex ${
         isMobileChatOpen ? "translate-x-0" : "translate-x-full md:translate-x-0 hidden md:flex"
       }`}>
@@ -160,5 +154,17 @@ export default function ConversationsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ConversationsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+      </div>
+    }>
+      <ConversationsContent />
+    </Suspense>
   );
 }
