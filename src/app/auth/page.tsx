@@ -104,7 +104,7 @@ export default function AuthPage() {
   };
   return (
     <div className="min-h-screen bg-[#09090b] text-white font-outfit flex flex-col md:flex-row">
-      {/* Left Side: Branding & Info — hidden on mobile */}
+      {/* Left Side: Branding & Info */}
       <div className="hidden md:flex md:w-1/2 bg-zinc-950/50 p-12 lg:p-24 flex-col justify-between border-r border-zinc-800/30">
         <div>
           <Link href="/" className="flex items-center space-x-3 mb-16">
@@ -140,7 +140,17 @@ export default function AuthPage() {
       </div>
 
       {/* Right Side: Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-24 relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-24 relative overflow-hidden">
+        {/* Mobile Logo */}
+        <div className="md:hidden w-full flex justify-between items-center mb-12">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <span className="text-lg font-bold tracking-tight">ChatBot SaaS</span>
+          </Link>
+          <Link href="/" className="text-xs font-bold text-zinc-500">
+            ← Home
+          </Link>
+        </div>
         {/* Animated Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[120px] -z-10"></div>
 

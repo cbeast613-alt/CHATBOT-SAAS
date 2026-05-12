@@ -72,8 +72,9 @@ export async function POST(request: Request) {
       message: "Account created successfully! You can now log in." 
     });
 
-  } catch (error) {
-    console.error("Signup API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error("[Signup API] Critical Error:", err);
+    return NextResponse.json({ error: err.message || "Internal server error during account creation" }, { status: 500 });
   }
 }

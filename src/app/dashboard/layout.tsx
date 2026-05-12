@@ -73,6 +73,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
     { name: "AI Training", icon: <Brain size={20} />, href: "/dashboard/training" },
     { name: "Widget", icon: <Palette size={20} />, href: "/dashboard/widget" },
     { name: "Billing", icon: <CreditCard size={20} />, href: "/dashboard/billing" },
+    { name: "Settings", icon: <LogOut size={20} className="rotate-180" />, href: "/dashboard/settings" },
   ];
 
   const { isDirty, setIsDirty } = useDashboard();

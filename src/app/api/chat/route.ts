@@ -191,10 +191,9 @@ export async function POST(request: Request) {
     // --- Multi-model fallback chain ---
     // Updated for May 2026 model inventory
     const MODELS_TO_TRY = [
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
-      "gemini-2.0-flash",
-      "gemini-flash-latest",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-pro",
     ];
 
     let responseText = "";
@@ -309,8 +308,9 @@ export async function POST(request: Request) {
       );
     }
 
+    console.error("[Chat API] Final Error:", err);
     return NextResponse.json(
-      { error: err.message || "Something went wrong. Please try again." },
+      { error: err.message || "An unexpected error occurred in the AI engine. Please try again." },
       { status: 500 }
     );
 
