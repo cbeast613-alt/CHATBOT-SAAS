@@ -115,8 +115,19 @@ export async function POST(request: Request) {
         }
 
         if (!tenant) {
-          console.error("Tenant lookup failed for ID and session:", tenantId);
-          return NextResponse.json({ error: "Unauthorized: Business profile not found." }, { status: 401 });
+          console.warn(`[Chat API] No business profile found for tenantId ${tenantId}. Using default fallback.`);
+          // Fallback tenant for new users or trial testing
+          tenant = {
+            id: tenantId,
+            business_name: "AI Assistant",
+            business_context: "You are a helpful AI assistant. Answer user questions helpfully, professionally, and concisely.",
+            is_active: true,
+            monthly_message_count: 0,
+            monthly_message_limit: 50,
+            plan: "trial",
+            email: "support@chatbotsaas.in",
+            limit_reached_at: null,
+          };
         }
       } else {
         tenant = tenantData;
