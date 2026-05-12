@@ -76,7 +76,15 @@ export default function Dashboard() {
     chartsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const usagePercent = stats ? Math.round((stats.monthly_message_count / stats.monthly_message_limit) * 100) : 0;
+  const getLimit = () => {
+    if (stats?.monthly_message_limit) return stats.monthly_message_limit;
+    const plan = stats?.plan?.toLowerCase() || 'trial';
+    if (plan === 'starter') return 300;
+    if (plan === 'pro') return 1000;
+    return 50;
+  };
+  const messageLimit = getLimit();
+  const usagePercent = stats ? Math.round((stats.monthly_message_count / messageLimit) * 100) : 0;
 
   if (loading) return <DashboardSkeleton />;
 
@@ -148,7 +156,7 @@ export default function Dashboard() {
         <StatCard 
           label="MONTHLY MESSAGES" 
           value={stats?.monthly_message_count?.toLocaleString() || "0"} 
-          subtext={`of ${stats?.monthly_message_limit?.toLocaleString() || "50"} limit`}
+          subtext={`of ${messageLimit.toLocaleString()} limit`}
           icon={<MessageSquare className="text-orange-500" size={16} />}
         />
         <StatCard 
@@ -221,8 +229,8 @@ export default function Dashboard() {
                   <BarChart3 size={48} className="opacity-10" />
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="font-black text-xs uppercase tracking-[0.2em] text-zinc-500">Analytics Loading</p>
-                  <p className="text-xs text-zinc-600 font-medium italic">Data will appear once your bot handles messages.</p>
+                  <p className="font-black text-xs uppercase tracking-[0.2em] text-zinc-500">No messages yet</p>
+                  <p className="text-xs text-zinc-600 font-medium italic">Share your widget to get started.</p>
                 </div>
               </div>
             )
@@ -261,7 +269,7 @@ export default function Dashboard() {
             <div className="space-y-5 bg-black/20 p-6 rounded-3xl border border-zinc-800/30">
               <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                 <span className="text-zinc-500">{stats?.monthly_message_count?.toLocaleString() || "0"} USED</span>
-                <span className="text-zinc-400">{(stats?.monthly_message_limit || 50) - (stats?.monthly_message_count || 0)} FREE LEFT</span>
+                <span className="text-zinc-400">{Math.max(0, messageLimit - (stats?.monthly_message_count || 0))} FREE LEFT</span>
               </div>
               <div className="h-2 w-full bg-zinc-800/50 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${usagePercent}%` }}></div>
@@ -296,8 +304,8 @@ export default function Dashboard() {
               <div className="py-20 text-center space-y-4 bg-zinc-950/20 rounded-[2.5rem] border border-zinc-800/20">
                 <div className="text-5xl opacity-20">📭</div>
                 <div className="space-y-1">
-                  <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">Inbox is Empty</p>
-                  <p className="text-[10px] text-zinc-600 font-medium">Try chatting with your bot in the test panel above.</p>
+                  <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">No conversations yet</p>
+                  <p className="text-[10px] text-zinc-600 font-medium">Test your bot above to begin.</p>
                 </div>
               </div>
             )}
@@ -411,8 +419,8 @@ function ChatTestPanel({
   };
 
   return (
-    <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-6 flex flex-col h-[500px] lg:h-auto">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
+    <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-6 flex flex-col h-full lg:min-h-[480px]">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-orange-500/20">🤖</div>
           <div>
@@ -427,7 +435,7 @@ function ChatTestPanel({
 
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-4 px-2 mb-6 custom-scrollbar"
+        className="h-[280px] overflow-y-auto space-y-4 px-2 mb-6 custom-scrollbar scroll-smooth"
       >
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
