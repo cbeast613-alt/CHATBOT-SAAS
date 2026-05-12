@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Mail } from "lucide-react";
 import { Session } from "@supabase/supabase-js";
 import ChatWidget from "@/components/ChatWidget";
+import LiveDemo from "@/components/LiveDemo";
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -146,32 +147,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Demo Section (Fix 3) */}
-        <section id="demo" className="py-32 bg-zinc-950 relative border-y border-zinc-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row items-center gap-16">
-              <div className="flex-1 space-y-8">
-                <h2 className="text-4xl md:text-6xl font-black tracking-tight">Try it live</h2>
-                <p className="text-zinc-400 text-lg font-medium leading-relaxed">
-                  Ask anything — see how your chatbot responds in real time. Our AI is trained to handle complex queries in English, Hindi, and Hinglish.
-                </p>
-                <div className="flex items-center space-x-4 text-sm font-bold text-orange-500">
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                  <span>Currently processing 1,000+ chats daily</span>
-                </div>
-              </div>
-              <div className="flex-1 w-full bg-zinc-900/50 border border-zinc-800 p-8 rounded-[3rem] h-[500px] flex items-center justify-center relative group">
-                <div className="absolute inset-0 bg-orange-500/5 blur-3xl rounded-full group-hover:bg-orange-500/10 transition-colors"></div>
-                <p className="text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs">Interactive Demo Interface</p>
-                {/* Note: The ChatWidget component already provides a demo experience on this page */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/5 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full text-xs font-bold">
-                  Use the bubble in the bottom right →
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Features Section */}
         <section id="features" className="py-32 bg-[#0c0c0e] relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -219,6 +194,120 @@ export default function Home() {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">{f.title}</h3>
                   <p className="text-zinc-500 leading-relaxed font-medium">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Demo Section */}
+        <section id="demo" className="py-32 bg-zinc-950 relative border-y border-zinc-900 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-orange-500/5 rounded-full blur-[120px] -z-0"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="flex flex-col lg:flex-row items-center gap-20">
+              <div className="flex-1 space-y-10">
+                <div>
+                  <div className="inline-flex items-center space-x-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                    Interactive Preview
+                  </div>
+                  <h2 className="text-4xl md:text-7xl font-black tracking-tight leading-[0.95] mb-8">
+                    See your future <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Assistant in action</span>
+                  </h2>
+                  <p className="text-zinc-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl">
+                    Experience how our AI captures leads and handles customer queries automatically. This is exactly what your visitors will see.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <p className="text-3xl font-black text-white tracking-tighter">98%</p>
+                    <p className="text-xs font-black text-zinc-600 uppercase tracking-widest">Accuracy Rate</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-3xl font-black text-white tracking-tighter">&lt; 2s</p>
+                    <p className="text-xs font-black text-zinc-600 uppercase tracking-widest">Response Time</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 bg-zinc-900/50 border border-zinc-800/50 p-6 rounded-3xl max-w-md">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-sm font-bold text-zinc-300">Automatic Lead Sync enabled for this demo.</p>
+                </div>
+              </div>
+
+              <div className="flex-1 w-full relative">
+                <div className="absolute -inset-4 bg-gradient-to-tr from-orange-500/20 to-transparent blur-2xl rounded-[3rem] opacity-50"></div>
+                <LiveDemo />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-32 bg-[#09090b] relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-24">
+              <div className="inline-flex items-center space-x-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                Success Stories
+              </div>
+              <h2 className="text-3xl md:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]">
+                Loved by India's <br />
+                Fastest Growing Brands
+              </h2>
+              <p className="text-zinc-500 max-w-2xl mx-auto text-lg font-medium">
+                Join 500+ businesses automating their growth with ChatBot SaaS.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: "Rahul Mehra",
+                  business: "D2C Clothing Brand",
+                  city: "Mumbai",
+                  quote: "We've seen a 40% increase in lead conversion since adding the chatbot. The Hinglish support is a game-changer for our customers."
+                },
+                {
+                  name: "Priya Sharma",
+                  business: "IIT-JEE Coaching Institute",
+                  city: "Delhi",
+                  quote: "Our team used to spend hours answering basic fee queries. Now, the AI handles 90% of it, allowing us to focus on counseling."
+                },
+                {
+                  name: "Anish Gupta",
+                  business: "Real Estate Agency",
+                  city: "Bangalore",
+                  quote: "The lead quality is incredible. Getting phone numbers and requirements directly in our CRM while we sleep is pure magic."
+                }
+              ].map((t, i) => (
+                <div key={i} className="bg-zinc-900/30 border border-zinc-800/50 p-10 rounded-[2.5rem] hover:bg-zinc-900/50 transition-all group flex flex-col h-full">
+                  <div className="flex space-x-1 mb-8">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <svg key={star} className="w-5 h-5 text-orange-500 fill-current" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-zinc-100 text-lg font-medium leading-relaxed italic mb-10 flex-1">
+                    "{t.quote}"
+                  </p>
+                  <div className="flex items-center space-x-4 pt-8 border-t border-zinc-800/50">
+                    <div className="w-12 h-12 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl flex items-center justify-center text-xl font-bold text-zinc-400 group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all duration-500 shadow-lg">
+                      {t.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-white font-black text-sm tracking-tight">{t.name}</p>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">
+                        {t.business} • {t.city}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
