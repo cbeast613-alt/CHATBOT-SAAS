@@ -191,10 +191,12 @@ export async function POST(request: Request) {
     // --- Multi-model fallback chain ---
     // Updated for May 2026 model inventory
     const MODELS_TO_TRY = [
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-flash",
-      "gemini-1.5-pro-latest",
-      "gemini-1.5-pro",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-flash-latest",
+      "gemini-2.5-pro",
+      "gemini-pro-latest",
+      "gemini-1.5-flash", // Last ditch fallback if aliases fail
     ];
 
     let responseText = "";
