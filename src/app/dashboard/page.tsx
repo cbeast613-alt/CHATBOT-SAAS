@@ -159,9 +159,6 @@ export default function Dashboard() {
     </div>
   );
 }
-    </div>
-  );
-}
 
 function DashboardSkeleton() {
   return (
