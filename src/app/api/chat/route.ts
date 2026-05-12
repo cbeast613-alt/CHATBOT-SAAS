@@ -191,9 +191,10 @@ export async function POST(request: Request) {
     // --- Multi-model fallback chain ---
     // Updated for May 2026 model inventory
     const MODELS_TO_TRY = [
+      "gemini-1.5-flash-latest",
       "gemini-1.5-flash",
+      "gemini-1.5-pro-latest",
       "gemini-1.5-pro",
-      "gemini-pro",
     ];
 
     let responseText = "";
