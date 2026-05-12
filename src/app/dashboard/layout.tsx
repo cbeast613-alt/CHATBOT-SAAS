@@ -169,6 +169,10 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile top bar with hamburger */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/30 z-20 shrink-0">
+          <Link href="/dashboard" className="flex items-center space-x-2">
+            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.6)]"></div>
+            <span className="text-base font-black tracking-tighter text-white">ChatBot SaaS</span>
+          </Link>
           <button
             onClick={() => setSidebarOpen(true)}
             className="w-10 h-10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-xl transition-all text-xl"
@@ -176,11 +180,6 @@ export default function DashboardLayout({
           >
             ☰
           </button>
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.6)]"></div>
-            <span className="text-base font-black tracking-tighter text-white">ChatBot SaaS</span>
-          </Link>
-          <div className="w-10" /> {/* Spacer to center the logo */}
         </header>
 
         {/* Page content */}
