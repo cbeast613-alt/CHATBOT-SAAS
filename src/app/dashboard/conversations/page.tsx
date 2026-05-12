@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 interface Conversation {
   id: string;
@@ -14,6 +15,9 @@ interface Conversation {
 }
 
 export default function ConversationsPage() {
+  const searchParams = useSearchParams();
+  const preselectedId = searchParams.get("id");
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -32,8 +36,14 @@ export default function ConversationsPage() {
         
         if (json.data) {
           setConversations(json.data);
-          // Only auto-select on desktop
-          if (window.innerWidth >= 768 && json.data.length > 0) {
+          
+          // Selection logic:
+          // 1. If 'id' is in URL, select it and open mobile view
+          // 2. Otherwise, if desktop, select first item
+          if (preselectedId && json.data.some((c: Conversation) => c.id === preselectedId)) {
+            setSelectedId(preselectedId);
+            if (window.innerWidth < 768) setIsMobileChatOpen(true);
+          } else if (window.innerWidth >= 768 && json.data.length > 0) {
             setSelectedId(json.data[0].id);
           }
         }
@@ -45,7 +55,7 @@ export default function ConversationsPage() {
     }
 
     fetchConversations();
-  }, []);
+  }, [preselectedId]);
 
   const selectedConv = conversations.find((c) => c.id === selectedId);
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-// Removed unused supabase import
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   AreaChart, 
   Area, 
@@ -28,17 +29,23 @@ interface AnalyticsData {
   count: number;
 }
 
+interface RecentConversation {
+  id: string;
+  query: string;
+  meta: string;
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<TenantStats | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [conversations, setConversations] = useState<{ query: string; meta: string }[]>([]);
-
+  const [conversations, setConversations] = useState<RecentConversation[]>([]);
   const [mounted, setMounted] = useState(false);
+  
+  const chartsRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     async function fetchData() {
       try {
@@ -66,6 +73,10 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const scrollToCharts = () => {
+    chartsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -76,7 +87,7 @@ export default function Dashboard() {
 
   const usagePercent = Math.round(((stats?.monthly_message_count || 0) / (stats?.monthly_message_limit || 50)) * 100);
 
-  if (loading || !stats) {
+  if (!stats) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
@@ -98,19 +109,25 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <button className="bg-white/5 hover:bg-white/10 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold transition-all border border-white/10 backdrop-blur-md text-sm">
+          <button 
+            onClick={scrollToCharts}
+            className="bg-white/5 hover:bg-white/10 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-bold transition-all border border-white/10 backdrop-blur-md text-sm"
+          >
             View Analytics
           </button>
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-black transition-all flex items-center space-x-2 shadow-2xl shadow-orange-500/20 active:scale-95 text-sm">
+          <Link 
+            href="/dashboard/billing"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 md:px-8 md:py-4 rounded-2xl font-black transition-all flex items-center space-x-2 shadow-2xl shadow-orange-500/20 active:scale-95 text-sm"
+          >
             <span>Upgrade</span>
             <Zap size={16} fill="white" />
-          </button>
+          </Link>
         </div>
       </div>
 
       <div className="h-px bg-zinc-800/30 w-full"></div>
 
-      {/* Stats Grid — 1 col on mobile, 2 on sm, 4 on lg */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard 
           label="MONTHLY MESSAGES" 
@@ -141,7 +158,7 @@ export default function Dashboard() {
       </div>
 
       {/* Analytics & Live Test Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+      <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 scroll-mt-10">
         <div className="lg:col-span-2 bg-zinc-900/30 border border-zinc-800/50 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 space-y-6 md:space-y-8 h-full">
           <div className="flex items-center justify-between">
             <div>
@@ -241,9 +258,12 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <button className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-bold transition-all uppercase tracking-widest mt-8">
+          <Link 
+            href="/dashboard/billing"
+            className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-bold transition-all uppercase tracking-widest mt-8 text-center"
+          >
             Manage Quota
-          </button>
+          </Link>
         </div>
 
         {/* Recent Conversations */}
@@ -254,6 +274,7 @@ export default function Dashboard() {
               conversations.map((conv, i) => (
                 <ConversationItem 
                   key={i}
+                  id={conv.id}
                   query={conv.query} 
                   meta={conv.meta}
                 />
@@ -278,7 +299,7 @@ function ChatTestPanel({
 }: { 
   tenantId?: string, 
   businessName?: string, 
-  setConversations: (data: { query: string; meta: string }[]) => void 
+  setConversations: (data: any[]) => void 
 }) {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
     { role: 'assistant', content: `Hi! I'm your AI assistant for ${businessName || 'your business'}. Send me a message to test my responses!` }
@@ -409,9 +430,12 @@ function StatCard({ label, value, subtext, valueClassName = "text-white", icon }
   );
 }
 
-function ConversationItem({ query, meta }: { query: string, meta: string }) {
+function ConversationItem({ id, query, meta }: { id: string, query: string, meta: string }) {
   return (
-    <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-3xl p-6 flex items-start space-x-6 hover:bg-zinc-900/50 transition-all cursor-pointer group">
+    <Link 
+      href={`/dashboard/conversations?id=${id}`}
+      className="bg-zinc-900/30 border border-zinc-800/50 rounded-3xl p-6 flex items-start space-x-6 hover:bg-zinc-900/50 transition-all cursor-pointer group"
+    >
       <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-zinc-700 transition-colors">
         <span className="text-xl">💬</span>
       </div>
@@ -419,6 +443,6 @@ function ConversationItem({ query, meta }: { query: string, meta: string }) {
         <p className="text-lg font-medium text-zinc-100 leading-tight">{query}</p>
         <p className="text-sm text-zinc-500 font-medium">{meta}</p>
       </div>
-    </div>
+    </Link>
   );
 }
