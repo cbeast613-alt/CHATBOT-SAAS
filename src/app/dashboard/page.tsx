@@ -356,7 +356,13 @@ function ChatTestPanel({
     
     const userMessage = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    
+    // Add user message to UI immediately
+    const updatedMessages: { role: 'user' | 'assistant', content: string }[] = [
+      ...messages, 
+      { role: 'user', content: userMessage }
+    ];
+    setMessages(updatedMessages);
     setIsTyping(true);
 
     try {
@@ -366,24 +372,34 @@ function ChatTestPanel({
         body: JSON.stringify({
           message: userMessage,
           tenantId,
-          history: messages,
+          history: messages, // Send history BEFORE the new user message (API handles the new one)
           preview: true 
         })
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Server error");
+      }
+
       if (data.reply) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
         
+        // Refresh conversation list in background
         fetch(`/api/conversations?tenantId=${tenantId}`)
           .then(res => res.json())
           .then(json => setConversations(json.data || []))
           .catch(err => console.error("Conversations refresh failed:", err));
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I hit a snag. Please check your AI configuration." }]);
+        throw new Error("No response from AI");
       }
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Connection error. Make sure your API is live." }]);
+    } catch (err: any) {
+      console.error("Test chat failed:", err);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `❌ Error: ${err.message || "Please check your AI configuration."}` 
+      }]);
     } finally {
       setIsTyping(false);
     }
