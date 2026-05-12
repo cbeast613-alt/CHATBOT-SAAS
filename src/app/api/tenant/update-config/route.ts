@@ -25,6 +25,7 @@ export async function POST(request: Request) {
         chatbot_name: config.chatbot_name,
         chatbot_color: config.chatbot_color,
         chatbot_welcome: config.chatbot_welcome,
+        chatbot_placeholder: config.chatbot_placeholder,
       })
       .eq("user_id", userId);
 

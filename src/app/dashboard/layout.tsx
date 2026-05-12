@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { DashboardProvider, useDashboard } from "@/context/DashboardContext";
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -19,6 +20,14 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <DashboardProvider>
+      <DashboardInner>{children}</DashboardInner>
+    </DashboardProvider>
+  );
+}
+
+function DashboardInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userName, setUserName] = useState("User");
@@ -66,13 +75,27 @@ export default function DashboardLayout({
     { name: "Billing", icon: <CreditCard size={20} />, href: "/dashboard/billing" },
   ];
 
+  const { isDirty, setIsDirty } = useDashboard();
+
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    if (isDirty && pathname !== href) {
+      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to leave?");
+      if (!confirmed) {
+        e.preventDefault();
+        return;
+      }
+      setIsDirty(false); // Reset dirty state on confirmed navigation
+    }
+    setSidebarOpen(false);
+  };
+
   const SidebarContent = () => (
     <>
       <div className="p-8 md:p-10">
         <Link
           href="/dashboard"
           className="flex items-center space-x-3 group"
-          onClick={() => setSidebarOpen(false)}
+          onClick={(e) => handleNavClick(e, "/dashboard")}
         >
           <div className="w-3 h-3 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.6)] group-hover:scale-110 transition-transform"></div>
           <span className="text-xl md:text-2xl font-black tracking-tighter text-white">
@@ -95,7 +118,7 @@ export default function DashboardLayout({
             <Link
               key={item.name}
               href={item.href}
-              onClick={() => setSidebarOpen(false)}
+              onClick={(e) => handleNavClick(e, item.href)}
               className={`flex items-center space-x-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${
                 isActive
                   ? "bg-orange-500 text-white shadow-xl shadow-orange-500/10"
@@ -119,6 +142,7 @@ export default function DashboardLayout({
           </div>
           <Link
             href="/dashboard/billing"
+            onClick={(e) => handleNavClick(e, "/dashboard/billing")}
             className="text-xs font-bold text-zinc-400 hover:text-white transition-colors flex items-center space-x-1"
           >
             <span>Upgrade Access</span>

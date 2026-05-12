@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import ChatWidget from "@/components/ChatWidget";
+import { useDashboard } from "@/context/DashboardContext";
 
 const PRESET_COLORS = [
   "#f97316", // Orange
@@ -20,6 +21,7 @@ export default function WidgetConfigurator() {
   const [placeholder, setPlaceholder] = useState("Type your message...");
   const [brandColor, setBrandColor] = useState("#f97316");
   
+  const { isDirty, setIsDirty } = useDashboard();
   const [initialConfig, setInitialConfig] = useState({
     botName: "Support",
     welcomeMessage: "Namaste! 👋 How can I help you today?",
@@ -31,12 +33,15 @@ export default function WidgetConfigurator() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Check if any value is different from the initial fetched config
-  const isDirty = 
-    botName !== initialConfig.botName || 
-    welcomeMessage !== initialConfig.welcomeMessage || 
-    placeholder !== initialConfig.placeholder || 
-    brandColor !== initialConfig.brandColor;
+  // Update global dirty state
+  useEffect(() => {
+    const dirty = 
+      botName !== initialConfig.botName || 
+      welcomeMessage !== initialConfig.welcomeMessage || 
+      placeholder !== initialConfig.placeholder || 
+      brandColor !== initialConfig.brandColor;
+    setIsDirty(dirty);
+  }, [botName, welcomeMessage, placeholder, brandColor, initialConfig, setIsDirty]);
 
   useEffect(() => {
     async function fetchConfig() {
@@ -53,13 +58,14 @@ export default function WidgetConfigurator() {
             botName: data.chatbot_name || data.business_name || "Support",
             brandColor: data.chatbot_color || "#f97316",
             welcomeMessage: data.chatbot_welcome || "Namaste! 👋 How can I help you today?",
-            placeholder: "Type your message..."
+            placeholder: data.chatbot_placeholder || "Type your message..."
           };
           
           setTenantId(data.id);
           setBotName(fetched.botName);
           setBrandColor(fetched.brandColor);
           setWelcomeMessage(fetched.welcomeMessage);
+          setPlaceholder(fetched.placeholder);
           setInitialConfig(fetched);
         }
       } catch (err) {
@@ -100,6 +106,7 @@ export default function WidgetConfigurator() {
             chatbot_name: botName,
             chatbot_color: brandColor,
             chatbot_welcome: welcomeMessage,
+            chatbot_placeholder: placeholder,
           }
         }),
       });

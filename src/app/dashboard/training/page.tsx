@@ -52,87 +52,12 @@ const SECTIONS: Section[] = [
   },
 ];
 
-const DEFAULT_DATA: Record<string, string> = {
-  about: `Sharma Electronics is a trusted consumer electronics store located in Lajpat Nagar, New Delhi. We have been serving customers since 2005 — over 18 years of experience.
-
-We sell:
-• Mobile phones (Samsung, Apple, OnePlus, Vivo, OPPO, Realme)
-• Laptops & computers (Dell, HP, Lenovo, ASUS, Apple MacBook)
-• Televisions (Samsung, LG, Sony, Mi, Vu)
-• Home appliances (ACs, refrigerators, washing machines, microwaves)
-• Audio & accessories (earphones, speakers, smartwatches, power banks)
-
-We are authorised dealers for Samsung, LG, and Sony. All products come with official brand warranty. We also stock genuine accessories and spare parts.
-
-Our store address: Shop No. 14, Main Market, Lajpat Nagar-2, New Delhi – 110024.
-Contact: +91 98765 43210 | sharma.electronics@gmail.com`,
-
-  hours: `Monday to Saturday: 10:00 AM – 8:30 PM
-Sunday: 11:00 AM – 6:00 PM
-
-We are closed on the following national holidays:
-• Republic Day (26 January)
-• Independence Day (15 August)
-• Gandhi Jayanti (2 October)
-• Diwali (main day)
-• Holi (main day)
-
-During festival season (Diwali, Navratri), we may extend timings to 10:00 PM. Follow our WhatsApp status for updates.
-
-For urgent queries outside hours, WhatsApp us at +91 98765 43210 — we reply within a few hours.`,
-
-  pricing: `Our pricing is competitive and we match prices with major online platforms like Amazon and Flipkart on most products.
-
-Price ranges:
-• Mobile phones: ₹6,000 – ₹1,50,000
-• Laptops: ₹25,000 – ₹2,00,000
-• Televisions: ₹10,000 – ₹3,00,000
-• ACs: ₹28,000 – ₹90,000
-• Refrigerators: ₹12,000 – ₹80,000
-
-EMI options:
-• Zero cost EMI available on purchases above ₹5,000
-• EMI tenures: 3, 6, 9, 12, and 24 months
-• Available via HDFC, ICICI, SBI, Axis Bank credit cards
-• Bajaj Finserv EMI card also accepted — no credit card needed
-
-Payment methods we accept:
-• UPI (Google Pay, PhonePe, Paytm, BHIM)
-• All debit and credit cards (Visa, Mastercard, RuPay)
-• Net banking
-• Cash
-• No extra charges on any payment method
-
-Current offers:
-• 10% instant discount on all ACs — valid till 31 May 2025
-• Free Bluetooth earphones worth ₹999 on laptop purchase above ₹50,000
-• Exchange offer: Get up to ₹15,000 off on new smartphone with old phone exchange
-• Students get 5% additional discount on laptops (college ID required)`,
-
-  faq: `Q: Do you offer home delivery?
-A: Yes! We offer free home delivery within 10 km for purchases above ₹2,000. For orders below ₹2,000, a ₹99 delivery charge applies. Delivery is same-day or next-day depending on stock.
-
-Q: Do you do price matching with Amazon or Flipkart?
-A: Yes, we match prices with Amazon and Flipkart on most products. Show us the online price and we will match it or beat it.
-
-Q: Do you offer repair services?
-A: Yes, we have an in-store service centre open Monday to Saturday, 10 AM to 7 PM. We repair mobiles, laptops, and home appliances. Most mobile repairs are done within 1–2 hours.
-
-Q: Is warranty available on all products?
-A: Yes, all products come with official brand warranty. Mobile phones get 1 year warranty, laptops get 1–3 years, and appliances get 1–10 years depending on the brand and product.`,
-
-  tone: `You are a helpful, friendly, and knowledgeable assistant for Sharma Electronics. Think of yourself as a trusted shop assistant who genuinely wants to help the customer find the right product or get their question answered.
-
-LANGUAGE RULES:
-• Always reply in the same language the customer uses (Hindi, English, or Hinglish)
-• Use "ji" naturally in Hindi/Hinglish (e.g. "Haan ji", "Zaroor ji")
-• Keep replies short and to the point — 2 to 4 sentences max
-
-BEHAVIOUR RULES:
-• If a customer asks for a product recommendation, ask their budget first
-• Always mention EMI options when a customer asks about price
-• If you don't know the exact stock availability, say: "Please WhatsApp us at +91 98765 43210 for live stock updates"
-• Always end your reply by asking: "Is there anything else I can help you with?"`,
+const PLACEHOLDERS: Record<string, string> = {
+  about: "Example: Sharma Electronics is a trusted store in Delhi. We sell Samsung, Apple, and Dell products...",
+  hours: "Example: Monday to Saturday: 10:00 AM – 8:30 PM. Closed on Sundays.",
+  pricing: "Example: Price ranges: ₹6,000 – ₹1,50,000. EMI available via HDFC, SBI cards.",
+  faq: "Example: Q: Do you offer home delivery? A: Yes, free home delivery within 10km.",
+  tone: "Example: Be helpful and professional. Use 'ji' naturally in Hindi. Keep replies short.",
 };
 
 type SectionData = Record<string, string>;
@@ -140,7 +65,9 @@ type StatusType = "idle" | "saving" | "saved" | "error" | "testing" | "tested" |
 
 export default function TrainingPage() {
   const [tenantId, setTenantId]     = useState<string | null>(null);
-  const [data, setData]             = useState<SectionData>(DEFAULT_DATA);
+  const [data, setData]             = useState<SectionData>({
+    about: "", hours: "", pricing: "", faq: "", tone: ""
+  });
   const [status, setStatus]         = useState<StatusType>("idle");
   const [errorMsg, setErrorMsg]     = useState("");
   const [activeSection, setActive]  = useState<string>("about");
@@ -149,9 +76,9 @@ export default function TrainingPage() {
   const [urlInput, setUrlInput]     = useState("");
   const [importType, setImportType] = useState<"website" | "pdf">("website");
   const [scrapeProgress, setScrapeProgress] = useState(0);
-  const [charCounts, setCharCounts] = useState<Record<string, number>>(
-    Object.fromEntries(Object.entries(DEFAULT_DATA).map(([k, v]) => [k, v.length]))
-  );
+  const [charCounts, setCharCounts] = useState<Record<string, number>>({
+    about: 0, hours: 0, pricing: 0, faq: 0, tone: 0
+  });
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
@@ -251,6 +178,7 @@ export default function TrainingPage() {
       }, 500);
     } catch (err: unknown) {
       setStatus("error");
+      setScrapeProgress(0); // Reset progress on failure
       setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       clearInterval(interval);
@@ -498,7 +426,9 @@ export default function TrainingPage() {
                 <span className="text-4xl">{activeS.icon}</span>
                 <div>
                   <h3 className="text-xl font-black text-white">{activeS.label}</h3>
-                  <p className="text-sm text-zinc-500 font-medium">{activeS.hint}</p>
+                  <p className="text-sm text-zinc-500 font-medium">
+                    {data[activeSection] ? activeS.hint : "Start by adding your business information below"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -518,8 +448,8 @@ export default function TrainingPage() {
             <textarea
               value={data[activeSection] || ""}
               onChange={(e) => handleChange(activeSection, e.target.value)}
-              placeholder={activeS.placeholder}
-              className="w-full h-[400px] bg-zinc-950/50 border border-zinc-800/50 rounded-2xl p-8 text-zinc-200 placeholder-zinc-800 focus:outline-none focus:border-orange-500/30 transition-colors text-sm leading-relaxed font-mono custom-scrollbar"
+              placeholder={PLACEHOLDERS[activeSection]}
+              className="w-full h-[400px] bg-zinc-950/50 border border-zinc-800/50 rounded-2xl p-8 text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-orange-500/30 transition-colors text-sm leading-relaxed font-mono custom-scrollbar"
             />
           </div>
 
