@@ -3,16 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
-} from 'recharts';
-import { TrendingUp, Users, MessageSquare, Zap, BarChart3 } from 'lucide-react';
+import { TrendingUp, Users, MessageSquare, Zap } from 'lucide-react';
 
 interface TenantStats {
   id: string;
@@ -24,10 +15,7 @@ interface TenantStats {
   created_at: string;
 }
 
-interface AnalyticsData {
-  date: string;
-  count: number;
-}
+
 
 interface RecentConversation {
   id: string;
@@ -37,15 +25,12 @@ interface RecentConversation {
 
 export default function Dashboard() {
   const [stats, setStats] = useState<TenantStats | null>(null);
-  const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<RecentConversation[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  const chartsRef = useRef<HTMLDivElement>(null);
+  // const chartsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
     async function fetchData() {
       try {
         const tenantRes = await fetch('/api/tenant/me');
@@ -54,12 +39,10 @@ export default function Dashboard() {
         const tenantData = await tenantRes.json();
         setStats(tenantData);
         
-        const [analyticsJson, conversationsJson] = await Promise.all([
-          fetch(`/api/analytics?tenantId=${tenantData.id}`).then(r => r.json()),
+        const [conversationsJson] = await Promise.all([
           fetch(`/api/conversations?tenantId=${tenantData.id}`).then(r => r.json())
         ]);
         
-        setAnalytics(analyticsJson.data || []);
         setConversations(conversationsJson.data || []);
 
       } catch (err) {
@@ -73,7 +56,7 @@ export default function Dashboard() {
   }, []);
 
   const scrollToCharts = () => {
-    chartsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // chartsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const getLimit = () => {
@@ -173,145 +156,9 @@ export default function Dashboard() {
           icon={<TrendingUp className="text-orange-500" size={16} />}
         />
       </div>
-
-      {/* Analytics */}
-      <div ref={chartsRef} className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-6 md:p-10 space-y-8 scroll-mt-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Message Volume</h3>
-            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] mt-2">7-Day Engagement Trend</p>
-          </div>
-          {analytics.length > 0 && (
-            <div className="flex items-center space-x-2 bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-500/20 shadow-lg shadow-orange-500/5">
-              <TrendingUp size={14} className="text-orange-500" />
-              <span className="text-xs font-black text-orange-500">+12% growth</span>
-            </div>
-          )}
-        </div>
-
-        <div className="h-[350px] w-full flex items-center justify-center">
-          {mounted && (
-            analytics.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analytics}>
-                  <defs>
-                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#52525b', fontSize: 10, fontWeight: 700 }}
-                    dy={10}
-                  />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-                    itemStyle={{ color: '#f97316', fontWeight: 800, fontSize: '12px' }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#f97316" 
-                    strokeWidth={4}
-                    fillOpacity={1} 
-                    fill="url(#colorCount)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-zinc-600 space-y-6 py-20 bg-zinc-950/20 rounded-[2.5rem] w-full border border-zinc-800/20">
-                <div className="p-8 bg-zinc-800/30 rounded-[2rem] border border-zinc-800/50 shadow-inner">
-                  <BarChart3 size={48} className="opacity-10" />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="font-black text-xs uppercase tracking-[0.2em] text-zinc-500">No messages yet</p>
-                  <p className="text-xs text-zinc-600 font-medium italic">Share your widget to get started.</p>
-                </div>
-              </div>
-            )
-          )}
-        </div>
-      </div>
-
-      {/* Bottom Grid - 2 Columns Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Usage Progress */}
-        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between h-full hover:bg-zinc-900/50 transition-all group">
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white tracking-tight">Quota Status</h3>
-              <div className="bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700/30">
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{stats?.plan || 'trial'}</span>
-              </div>
-            </div>
-            
-            <div className="relative flex items-center justify-center h-56">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="85" stroke="currentColor" strokeWidth="16" fill="transparent" className="text-zinc-800/50" />
-                <circle
-                  cx="50%" cy="50%" r="85" stroke="currentColor" strokeWidth="16" fill="transparent"
-                  strokeDasharray={`${(usagePercent / 100) * 534} 534`}
-                  strokeLinecap="round"
-                  className="text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-1000 ease-out"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-5xl font-black text-white tracking-tighter">{usagePercent}%</span>
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-2">Consumed</span>
-              </div>
-            </div>
-
-            <div className="space-y-5 bg-black/20 p-6 rounded-3xl border border-zinc-800/30">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-zinc-500">{stats?.monthly_message_count?.toLocaleString() || "0"} USED</span>
-                <span className="text-zinc-400">{Math.max(0, messageLimit - (stats?.monthly_message_count || 0))} FREE LEFT</span>
-              </div>
-              <div className="h-2 w-full bg-zinc-800/50 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${usagePercent}%` }}></div>
-              </div>
-            </div>
-          </div>
-          <Link 
-            href="/dashboard/billing"
-            className="w-full py-5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-black transition-all uppercase tracking-[0.2em] mt-10 text-center border border-zinc-700/50 group-hover:bg-orange-500 group-hover:border-orange-400/50 duration-300"
-          >
-            Upgrade Capacity
-          </Link>
-        </div>
-
-        {/* Recent Conversations */}
-        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 md:p-10 space-y-8 h-full hover:bg-zinc-900/50 transition-all">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white tracking-tight">Recent Activity</h3>
-            <Link href="/dashboard/conversations" className="text-xs font-bold text-orange-500 hover:underline">View All</Link>
-          </div>
-          <div className="space-y-4">
-            {conversations.length > 0 ? (
-              conversations.slice(0, 4).map((conv, i) => (
-                <ConversationItem 
-                  key={i}
-                  id={conv.id}
-                  query={conv.query} 
-                  meta={conv.meta}
-                />
-              ))
-            ) : (
-              <div className="py-20 text-center space-y-4 bg-zinc-950/20 rounded-[2.5rem] border border-zinc-800/20">
-                <div className="text-5xl opacity-20">📭</div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">No conversations yet</p>
-                  <p className="text-[10px] text-zinc-600 font-medium">Test your bot above to begin.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    </div>
+  );
+}
     </div>
   );
 }
