@@ -45,13 +45,13 @@ async function setupUser(email, password, businessName) {
   console.log(`✅ Auth user created! ID: ${userId}`);
 
   const { error: tenantError } = await supabase.from('tenants').insert({
-    id: userId,
-    name: businessName,
+    user_id: userId,
+    business_name: businessName,
     email: email,
     plan: 'growth',
     is_active: true,
-    message_limit: 2000,
-    monthly_message_count: 0
+    monthly_message_count: 0,
+    monthly_message_limit: 2000
   });
 
   if (tenantError) {

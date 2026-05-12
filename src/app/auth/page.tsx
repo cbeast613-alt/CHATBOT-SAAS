@@ -1,13 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type Tab = "login" | "signup";
 type Plan = "starter" | "growth" | "agency";
@@ -19,8 +15,8 @@ const PLANS: { id: Plan; name: string; price: string; limit: number }[] = [
 ];
 
 export default function AuthPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("login");
-  const [plan, setPlan] = useState<Plan>("starter");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -37,8 +33,9 @@ export default function AuthPage() {
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
-      setMessage({ type: "success", text: "Welcome back! Redirecting..." });
-      setTimeout(() => { window.location.href = "/"; }, 1000);
+      setMessage({ type: "success", text: "Welcome back! Redirecting to dashboard..." });
+      router.push("/dashboard");
+      router.refresh();
     }
     setLoading(false);
   };
@@ -53,7 +50,7 @@ export default function AuthPage() {
         throw new Error("Please enter your business name.");
       }
 
-        const selectedPlan = PLANS.find((p) => p.id === plan) ?? PLANS[0];
+        const selectedPlan = PLANS.find((p) => p.id === "starter") ?? PLANS[0];
 
         // Call the new Server-Side Signup API
         const res = await fetch("/api/auth/signup", {
@@ -64,14 +61,20 @@ export default function AuthPage() {
             password,
             businessName: businessName.trim(),
             plan: selectedPlan.id,
-        throw new Error(data.error || "Signup failed.");
-      }
+          }),
+        });
 
-      // Success feedback
-      setMessage({
-        type: "success",
-        text: data.message || "Account created! You can now log in.",
-      });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || "Signup failed.");
+        }
+
+        // Success feedback
+        setMessage({
+          type: "success",
+          text: data.message || "Account created! Logging you in...",
+        });
       
       // Send welcome email (Non-blocking)
       fetch("/api/emails/welcome", {
@@ -80,8 +83,16 @@ export default function AuthPage() {
         body: JSON.stringify({ email, name: businessName.trim() }),
       }).catch(err => console.error("Welcome email trigger failed:", err));
 
-      // Auto-switch to login tab after success
-      setTimeout(() => setTab("login"), 2500);
+      // Auto-login after success
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      if (loginError) {
+        setTab("login");
+        setMessage({ type: "error", text: "Account created but auto-login failed. Please log in manually." });
+      } else {
+        setMessage({ type: "success", text: "Account created! Redirecting..." });
+        router.push("/dashboard");
+        router.refresh();
+      }
 
     } catch (err: unknown) {
       console.error("Signup process failed:", err);
@@ -93,12 +104,16 @@ export default function AuthPage() {
   };
   return (
     <div className="min-h-screen bg-[#09090b] text-white font-outfit flex flex-col md:flex-row">
-      {/* Left Side: Branding & Info */}
-      <div className="md:w-1/2 bg-zinc-950/50 p-12 lg:p-24 flex flex-col justify-between border-r border-zinc-800/30">
+      {/* Left Side: Branding & Info — hidden on mobile */}
+      <div className="hidden md:flex md:w-1/2 bg-zinc-950/50 p-12 lg:p-24 flex-col justify-between border-r border-zinc-800/30">
         <div>
           <Link href="/" className="flex items-center space-x-3 mb-16">
             <div className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
             <span className="text-xl font-bold tracking-tight text-white">ChatBot SaaS</span>
+          </Link>
+          <Link href="/" className="text-xs font-bold text-zinc-500 hover:text-orange-500 transition-colors flex items-center space-x-1.5 -mt-12 mb-12">
+            <span>←</span>
+            <span>Back to Home</span>
           </Link>
 
           <div className="space-y-6">
@@ -193,6 +208,13 @@ export default function AuthPage() {
                 placeholder="••••••••"
                 className="w-full bg-zinc-900/30 border border-zinc-800/50 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-orange-500/50 transition-colors"
               />
+              {tab === "login" && (
+                <div className="text-right pr-2 mt-2">
+                  <Link href="/auth/forgot-password" className="text-xs font-bold text-zinc-500 hover:text-orange-500 transition-colors">
+                    Forgot Password?
+                  </Link>
+                </div>
+              )}
             </div>
 
 

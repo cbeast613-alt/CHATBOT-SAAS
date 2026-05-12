@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { sendUsageWarningEmail, sendBotPausedEmail } from "@/lib/emails";
 
 interface Tenant {
@@ -59,19 +61,22 @@ export async function POST(request: Request) {
     const genAI = getGenAI();
 
     if (!supabase) {
-      return NextResponse.json({ error: "Supabase configuration missing (SERVICE_ROLE_KEY or URL)" }, { status: 500 });
+      console.error("Supabase config missing: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json({ error: "Server configuration missing (Supabase)" }, { status: 500 });
     }
     if (!genAI) {
-      return NextResponse.json({ error: "AI configuration missing (GEMINI_API_KEY)" }, { status: 500 });
+      console.error("AI config missing: GEMINI_API_KEY");
+      return NextResponse.json({ error: "AI configuration missing (Gemini API Key)" }, { status: 500 });
     }
 
-    // --- Handle Demo Mode for Landing Page ---
+    // --- Handle Tenant Lookup ---
     let tenant: Tenant | null = null;
+    
     if (tenantId === "demo") {
       tenant = {
         id: "demo",
         business_name: "ChatBot SaaS",
-        business_context: "You are a demo assistant for ChatBot SaaS. Our platform helps Indian businesses automate customer support using AI. We support English, Hindi, and Hinglish. Pricing starts at ₹99/month. Features include WhatsApp integration, lead generation, and website scraping. We have 3 plans: Starter, Growth, and Agency.",
+        business_context: "Demo assistant.",
         is_active: true,
         monthly_message_count: 0,
         monthly_message_limit: 1000,
@@ -80,6 +85,7 @@ export async function POST(request: Request) {
         limit_reached_at: null,
       };
     } else {
+      // Try lookup by ID first
       const { data: tenantData, error: tenantError } = await supabase
         .from("tenants")
         .select("id, business_name, email, business_context, plan, is_active, monthly_message_count, monthly_message_limit, limit_reached_at")
@@ -87,9 +93,34 @@ export async function POST(request: Request) {
         .single();
 
       if (tenantError || !tenantData) {
-        return NextResponse.json({ error: "Invalid tenant" }, { status: 403 });
+        // --- Fallback: Try lookup by session (for the owner) ---
+        const cookieStore = await cookies();
+        const serverSupabase = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { cookies: { get(name) { return cookieStore.get(name)?.value; } } }
+        );
+        const { data: { session } } = await serverSupabase.auth.getSession();
+        
+        if (session) {
+          const { data: sessionTenant } = await supabase
+            .from("tenants")
+            .select("id, business_name, email, business_context, plan, is_active, monthly_message_count, monthly_message_limit, limit_reached_at")
+            .eq("user_id", session.user.id)
+            .single();
+          
+          if (sessionTenant) {
+            tenant = sessionTenant;
+          }
+        }
+
+        if (!tenant) {
+          console.error("Tenant lookup failed for ID and session:", tenantId);
+          return NextResponse.json({ error: "Unauthorized: Business profile not found." }, { status: 401 });
+        }
+      } else {
+        tenant = tenantData;
       }
-      tenant = tenantData;
     }
 
     if (!tenant.is_active) {
@@ -147,12 +178,10 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown error";
 
     // --- Multi-model fallback chain ---
-    // Prefer stable numeric Gemini models for this API version.
     const MODELS_TO_TRY = [
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
-      "gemini-2.0-flash",
       "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-pro",
     ];
 
     let responseText = "";
@@ -160,6 +189,7 @@ export async function POST(request: Request) {
 
     for (const modelName of MODELS_TO_TRY) {
       try {
+        console.log(`Attempting chat with model: ${modelName}`);
         const model = genAI.getGenerativeModel({
           model: modelName,
           systemInstruction: systemPrompt,
@@ -178,13 +208,14 @@ export async function POST(request: Request) {
       } catch (err: unknown) {
         lastError = err;
         const errorMessage = getErrorMessage(err);
-        console.warn(`Chat API model ${modelName} failed:`, errorMessage);
-        const isRetryable = /429|503|quota|unavailable|404/i.test(errorMessage);
-        if (isRetryable) {
-          continue; // try next model
-        } else {
-          throw err; // non-retryable error — stop immediately
+        console.error(`Chat API model ${modelName} failed:`, errorMessage);
+        
+        // If it's a safety error or invalid argument, don't retry other models
+        if (errorMessage.includes("SAFETY") || errorMessage.includes("INVALID_ARGUMENT")) {
+          throw err;
         }
+        
+        continue; // try next model
       }
     }
 

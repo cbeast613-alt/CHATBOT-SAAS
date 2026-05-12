@@ -1,7 +1,22 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Mail } from "lucide-react";
+import { Session } from "@supabase/supabase-js";
 import ChatWidget from "@/components/ChatWidget";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#09090b] text-white font-outfit selection:bg-orange-500/30 selection:text-orange-200">
       {/* Navigation */}
@@ -15,17 +30,65 @@ export default function Home() {
               </span>
             </Link>
             
+            {/* Desktop Nav */}
             <div className="hidden md:flex items-center space-x-10 text-sm font-medium text-zinc-400">
               <Link href="#features" className="hover:text-white transition-colors">Features</Link>
               <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
               <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
-              <Link href="/auth" className="text-zinc-100 font-semibold hover:text-white transition-colors">Login</Link>
-              <Link href="/auth" className="bg-orange-500 text-white px-6 py-2.5 rounded-full font-bold hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)]">
-                Get Started
+              <Link href={session ? "/dashboard" : "/auth"} className="text-zinc-100 font-semibold hover:text-white transition-colors">
+                {session ? "Dashboard" : "Login"}
+              </Link>
+              <Link href={session ? "/dashboard" : "/auth"} className="bg-orange-500 text-white px-6 py-2.5 rounded-full font-bold hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)]">
+                {session ? "Dashboard" : "Get Started"}
               </Link>
             </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              id="mobile-menu-button"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="md:hidden flex flex-col justify-center items-center w-10 h-10 space-y-1.5 rounded-xl border border-zinc-800 hover:border-zinc-600 transition-colors"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              <span className={`block w-5 h-0.5 bg-zinc-300 transition-all duration-300 ${mobileMenuOpen ? "rotate-45 translate-y-2" : ""}`} />
+              <span className={`block w-5 h-0.5 bg-zinc-300 transition-all duration-300 ${mobileMenuOpen ? "opacity-0" : ""}`} />
+              <span className={`block w-5 h-0.5 bg-zinc-300 transition-all duration-300 ${mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Drawer */}
+        {mobileMenuOpen && (
+          <div id="mobile-menu" className="md:hidden border-t border-zinc-800/50 bg-[#09090b]/95 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col space-y-4 text-sm font-medium">
+              <Link
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-zinc-400 hover:text-white transition-colors py-2 border-b border-zinc-800/30"
+              >Features</Link>
+              <Link
+                href="#pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-zinc-400 hover:text-white transition-colors py-2 border-b border-zinc-800/30"
+              >Pricing</Link>
+              <Link
+                href="#faq"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-zinc-400 hover:text-white transition-colors py-2 border-b border-zinc-800/30"
+              >FAQ</Link>
+              <Link
+                href={session ? "/dashboard" : "/auth"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-zinc-100 font-semibold hover:text-white transition-colors py-2 border-b border-zinc-800/30"
+              >{session ? "Dashboard" : "Login"}</Link>
+              <Link
+                href={session ? "/dashboard" : "/auth"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold hover:bg-orange-600 transition-all text-center shadow-[0_0_20px_rgba(249,115,22,0.2)]"
+              >{session ? "Dashboard" : "Get Started"}</Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="relative">
@@ -69,11 +132,41 @@ export default function Home() {
             {/* Trusted by Section */}
             <div className="mt-32 pt-16 border-t border-zinc-800/30">
               <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.3em] mb-12">Trusted by 500+ Indian Businesses</p>
-              <div className="flex flex-wrap justify-center items-center gap-16 opacity-30 grayscale contrast-125">
-                <span className="text-2xl font-black tracking-tighter">SHOPIFY</span>
-                <span className="text-2xl font-black tracking-tighter">WOO</span>
-                <span className="text-2xl font-black tracking-tighter">WORDPRESS</span>
-                <span className="text-2xl font-black tracking-tighter">WIX</span>
+              <div className="flex flex-wrap items-center justify-center gap-6 mt-4">
+                {["Shopify", "WooCommerce", "WordPress", "Wix"].map(platform => (
+                  <span
+                    key={platform}
+                    className="text-sm font-semibold text-zinc-500 tracking-wider uppercase px-4 py-2 border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors bg-zinc-900/50"
+                  >
+                    {platform}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Demo Section (Fix 3) */}
+        <section id="demo" className="py-32 bg-zinc-950 relative border-y border-zinc-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              <div className="flex-1 space-y-8">
+                <h2 className="text-4xl md:text-6xl font-black tracking-tight">Try it live</h2>
+                <p className="text-zinc-400 text-lg font-medium leading-relaxed">
+                  Ask anything — see how your chatbot responds in real time. Our AI is trained to handle complex queries in English, Hindi, and Hinglish.
+                </p>
+                <div className="flex items-center space-x-4 text-sm font-bold text-orange-500">
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                  <span>Currently processing 1,000+ chats daily</span>
+                </div>
+              </div>
+              <div className="flex-1 w-full bg-zinc-900/50 border border-zinc-800 p-8 rounded-[3rem] h-[500px] flex items-center justify-center relative group">
+                <div className="absolute inset-0 bg-orange-500/5 blur-3xl rounded-full group-hover:bg-orange-500/10 transition-colors"></div>
+                <p className="text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs">Interactive Demo Interface</p>
+                {/* Note: The ChatWidget component already provides a demo experience on this page */}
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/5 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full text-xs font-bold">
+                  Use the bubble in the bottom right →
+                </div>
               </div>
             </div>
           </div>
@@ -146,7 +239,7 @@ export default function Home() {
                   name: "Starter",
                   price: "99",
                   desc: "Perfect for blogs and personal projects.",
-                  features: ["300 Messages/month", "Standard AI (Flash)", "Email Support", "Branding Included"],
+                  features: ["300 Messages/month", "Standard AI (Flash)", "Email Support", "ChatBot SaaS badge shown"],
                   cta: "Get Started",
                   popular: false
                 },
@@ -197,7 +290,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link href="/auth" className="block w-full">
+                  <Link href={plan.name === "Agency" ? "/contact" : "/auth"} className="block w-full">
                     <button className={`w-full py-5 rounded-2xl font-black transition-all ${
                       plan.popular 
                         ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-xl shadow-orange-500/20' 
@@ -207,6 +300,65 @@ export default function Home() {
                     </button>
                   </Link>
                 </div>
+              ))}
+            </div>
+
+            {/* Pricing Footnotes (Fix 5 & 6) */}
+            <div className="max-w-4xl mx-auto mt-16 space-y-4">
+              <p className="text-xs text-zinc-500 text-center leading-relaxed">
+                * Unlimited Messages subject to a fair use policy of 10,000 messages/month per chatbot. 
+                <Link href="/contact" className="text-orange-500 hover:underline ml-1">Contact us</Link> for higher volume needs.
+              </p>
+              <div className="h-px bg-zinc-900 w-24 mx-auto"></div>
+              <div className="text-center text-sm text-zinc-400">
+                <p className="font-bold text-zinc-300">Cancel anytime — no lock-in contracts.</p>
+                <p className="mt-1">7-day refund policy on first payment. <Link href="/terms#refund" className="text-orange-500 hover:underline">See full policy →</Link></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section (Fix 8) */}
+        <section id="faq" className="py-32 bg-[#09090b]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-20">
+              <h2 className="text-3xl md:text-6xl font-black text-white mb-6 tracking-tight">Got Questions?</h2>
+              <p className="text-zinc-500 text-lg font-medium">Everything you need to know about ChatBot SaaS.</p>
+            </div>
+            <div className="space-y-4">
+              {[
+                {
+                  q: "Does this work with my existing website?",
+                  a: "Yes. Just paste one line of JavaScript into your website's HTML. Works with WordPress, Wix, Shopify, or any custom site."
+                },
+                {
+                  q: "What languages does the chatbot support?",
+                  a: "English, Hindi, and Hinglish. The chatbot automatically detects the user's language and responds fluently."
+                },
+                {
+                  q: "Can I cancel my subscription anytime?",
+                  a: "Yes, cancel anytime from your dashboard. No hidden fees or lock-in contracts. First payment is refundable within 7 days."
+                },
+                {
+                  q: "How does WhatsApp Sync work?",
+                  a: "Connect your WhatsApp Business account from your dashboard. Conversations from your website chatbot will sync to your WhatsApp Business inbox."
+                },
+                {
+                  q: "What payment methods do you accept?",
+                  a: "UPI, PhonePe, Google Pay, Paytm, and all major credit/debit cards. All prices are in INR with no foreign transaction fees."
+                },
+                {
+                  q: "What does 'Unlimited Messages*' mean?",
+                  a: "Unlimited within a fair use policy of 10,000 messages/month per chatbot. For higher volumes, contact us for a custom plan."
+                }
+              ].map(({ q, a }, i) => (
+                <details key={i} className="group bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-6 cursor-pointer hover:bg-zinc-900/50 transition-all">
+                  <summary className="font-bold text-lg text-white list-none flex justify-between items-center">
+                    {q}
+                    <span className="text-orange-500 group-open:rotate-180 transition-transform">↓</span>
+                  </summary>
+                  <p className="mt-4 text-zinc-400 leading-relaxed font-medium">{a}</p>
+                </details>
               ))}
             </div>
           </div>
@@ -224,21 +376,52 @@ export default function Home() {
                 <p className="max-w-xs leading-relaxed font-medium">
                   The first AI chatbot platform built specifically for the unique needs of Indian businesses.
                 </p>
+                <div className="flex gap-4 mt-8">
+                  <a href="https://twitter.com" aria-label="Twitter" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all">
+                    {/* <X size={18} /> */}
+                  </a>
+                  <a href="https://www.linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all">
+                    {/* <Linkedin size={18} /> */}
+                  </a>
+                  <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all">
+                    {/* <Instagram size={18} /> */}
+                  </a>
+                </div>
               </div>
               <div>
                 <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Product</h4>
                 <ul className="space-y-5 font-medium">
                   <li><Link href="#features" className="hover:text-orange-500 transition-colors">Features</Link></li>
                   <li><Link href="#pricing" className="hover:text-orange-500 transition-colors">Pricing</Link></li>
-                  <li><Link href="/auth" className="hover:text-orange-500 transition-colors">Dashboard</Link></li>
+                  <li><Link href="/contact" className="hover:text-orange-500 transition-colors">Contact Sales</Link></li>
+                  <li>
+                    <Link href={session ? "/dashboard" : "/auth"} className="hover:text-orange-500 transition-colors">
+                      {session ? "Dashboard" : "Login"}
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div>
                 <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Legal</h4>
                 <ul className="space-y-5 font-medium">
-                  <li><Link href="#" className="hover:text-orange-500 transition-colors">Privacy</Link></li>
-                  <li><Link href="#" className="hover:text-orange-500 transition-colors">Terms</Link></li>
-                  <li><Link href="#" className="hover:text-orange-500 transition-colors">GDPR</Link></li>
+                  <li><Link href="/privacy" className="hover:text-orange-500 transition-colors">Privacy</Link></li>
+                  <li><Link href="/terms" className="hover:text-orange-500 transition-colors">Terms</Link></li>
+                  <li><Link href="/gdpr" className="hover:text-orange-500 transition-colors">GDPR</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Contact Us</h4>
+                <ul className="space-y-5 font-medium">
+                  <li>
+                    <a href="mailto:hello@chatbotsaas.in" className="flex items-center space-x-3 hover:text-orange-500 transition-colors group">
+                      <Mail size={16} className="text-orange-500 group-hover:scale-110 transition-transform" />
+                      <span>hello@chatbotsaas.in</span>
+                    </a>
+                  </li>
+                  <li className="text-sm pt-2">
+                    Plot No. 42, Sector 18,<br />
+                    Gurugram, Haryana 122015
+                  </li>
                 </ul>
               </div>
             </div>

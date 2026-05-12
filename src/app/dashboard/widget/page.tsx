@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 import ChatWidget from "@/components/ChatWidget";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 const PRESET_COLORS = [
   "#f97316", // Orange
@@ -24,53 +19,103 @@ export default function WidgetConfigurator() {
   const [welcomeMessage, setWelcomeMessage] = useState("Namaste! 👋 How can I help you today?");
   const [placeholder, setPlaceholder] = useState("Type your message...");
   const [brandColor, setBrandColor] = useState("#f97316");
+  
+  const [initialConfig, setInitialConfig] = useState({
+    botName: "Support",
+    welcomeMessage: "Namaste! 👋 How can I help you today?",
+    placeholder: "Type your message...",
+    brandColor: "#f97316"
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Check if any value is different from the initial fetched config
+  const isDirty = 
+    botName !== initialConfig.botName || 
+    welcomeMessage !== initialConfig.welcomeMessage || 
+    placeholder !== initialConfig.placeholder || 
+    brandColor !== initialConfig.brandColor;
+
   useEffect(() => {
     async function fetchConfig() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-      const { data, error } = await supabase
-        .from("tenants")
-        .select("id, business_name, chatbot_name, chatbot_color, chatbot_welcome")
-        .eq("user_id", session.user.id)
-        .single();
+        const res = await fetch("/api/tenant/me");
+        if (!res.ok) throw new Error("Failed to fetch config");
+        const data = await res.json();
 
-      if (data && !error) {
-        setTenantId(data.id);
-        setBotName(data.chatbot_name || data.business_name || "Support");
-        setBrandColor(data.chatbot_color || "#f97316");
-        setWelcomeMessage(data.chatbot_welcome || "Namaste! 👋 How can I help you today?");
+        if (data) {
+          const fetched = {
+            botName: data.chatbot_name || data.business_name || "Support",
+            brandColor: data.chatbot_color || "#f97316",
+            welcomeMessage: data.chatbot_welcome || "Namaste! 👋 How can I help you today?",
+            placeholder: "Type your message..."
+          };
+          
+          setTenantId(data.id);
+          setBotName(fetched.botName);
+          setBrandColor(fetched.brandColor);
+          setWelcomeMessage(fetched.welcomeMessage);
+          setInitialConfig(fetched);
+        }
+      } catch (err) {
+        console.error("Widget fetch error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     fetchConfig();
   }, []);
 
+  // Browser-level unsaved changes warning (refresh/close tab)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ""; // Standard way to trigger browser dialog
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   const handleSave = async () => {
     setSaving(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    const { error } = await supabase
-      .from("tenants")
-      .update({
-        chatbot_name: botName,
-        chatbot_color: brandColor,
-        chatbot_welcome: welcomeMessage,
-      })
-      .eq("user_id", session.user.id);
+      const res = await fetch("/api/tenant/update-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          config: {
+            chatbot_name: botName,
+            chatbot_color: brandColor,
+            chatbot_welcome: welcomeMessage,
+          }
+        }),
+      });
 
-    if (!error) {
-      alert("Configuration saved!");
-    } else {
-      alert("Error saving: " + error.message);
+      if (res.ok) {
+        setInitialConfig({ botName, welcomeMessage, placeholder, brandColor });
+        alert("Configuration saved!");
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || "Save failed");
+      }
+    } catch (err: any) {
+      alert("Error saving: " + err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const copyToClipboard = () => {
@@ -102,13 +147,22 @@ export default function WidgetConfigurator() {
           <h1 className="text-4xl font-bold tracking-tight text-white mb-1">Widget configurator</h1>
           <p className="text-zinc-500 font-medium">Customise, preview, then paste one line into any website.</p>
         </div>
-        <button 
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-zinc-100 hover:bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Save config"}
-        </button>
+        <div className="flex items-center space-x-4">
+          {isDirty && (
+            <span className="text-orange-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">Unsaved Changes</span>
+          )}
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className={`px-6 py-3 rounded-2xl font-bold transition-all disabled:opacity-50 ${
+              isDirty 
+                ? "bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/20" 
+                : "bg-zinc-100 hover:bg-white text-zinc-900"
+            }`}
+          >
+            {saving ? "Saving..." : "Save config"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">

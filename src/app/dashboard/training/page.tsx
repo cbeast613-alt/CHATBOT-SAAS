@@ -3,12 +3,8 @@
 // AI Training UI — Pre-filled with smart default data & Premium Dark Theme
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabase";
+import { Globe, FileText, Upload, Link as LinkIcon, Search, CheckCircle, AlertCircle, Zap, Trash2 } from 'lucide-react';
 
 interface Section {
   id: string;
@@ -139,8 +135,6 @@ BEHAVIOUR RULES:
 • Always end your reply by asking: "Is there anything else I can help you with?"`,
 };
 
-import { Globe, FileText, Upload, Link as LinkIcon, Search, CheckCircle, AlertCircle, Zap } from 'lucide-react';
-
 type SectionData = Record<string, string>;
 type StatusType = "idle" | "saving" | "saved" | "error" | "testing" | "tested" | "importing";
 
@@ -154,35 +148,43 @@ export default function TrainingPage() {
   const [testReply, setTestReply]   = useState("");
   const [urlInput, setUrlInput]     = useState("");
   const [importType, setImportType] = useState<"website" | "pdf">("website");
+  const [scrapeProgress, setScrapeProgress] = useState(0);
   const [charCounts, setCharCounts] = useState<Record<string, number>>(
     Object.fromEntries(Object.entries(DEFAULT_DATA).map(([k, v]) => [k, v.length]))
   );
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { window.location.href = "/auth"; return; }
-      const uid = session.user.id;
-      setTenantId(uid);
+    async function init() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = "/auth"; return; }
+        setTenantId(session.user.id);
 
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("business_context")
-        .eq("user_id", uid)
-        .single();
+        const res = await fetch("/api/tenant/me");
+        if (!res.ok) throw new Error("Could not fetch tenant data");
+        const tenant = await res.json();
 
-      if (tenant?.business_context) {
-        try {
-          const parsed = JSON.parse(tenant.business_context);
-          if (typeof parsed === "object") {
-            setData(parsed);
-            setCharCounts(Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, (v as string).length])));
+        if (tenant?.business_context) {
+          try {
+            const parsed = JSON.parse(tenant.business_context);
+            if (typeof parsed === "object" && parsed !== null) {
+              setData(parsed);
+              setCharCounts(Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, String(v).length])));
+            }
+          } catch {
+            setData({ about: tenant.business_context });
+            setCharCounts({ about: tenant.business_context.length });
           }
-        } catch {
-          setData({ about: tenant.business_context });
-          setCharCounts({ about: tenant.business_context.length });
         }
+      } catch (err) {
+        console.error("Training init error:", err);
+        setErrorMsg("Failed to load your training data.");
+      } finally {
+        setLoading(false);
       }
-    });
+    }
+    init();
   }, []);
 
   const handleChange = (sectionId: string, value: string) => {
@@ -217,7 +219,16 @@ export default function TrainingPage() {
   const handleWebsiteImport = async () => {
     if (!urlInput.trim()) return;
     setStatus("importing");
+    setScrapeProgress(0);
     setErrorMsg("");
+
+    // Simulate progress
+    const interval = setInterval(() => {
+      setScrapeProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + 5;
+      });
+    }, 400);
 
     try {
       const res = await fetch("/api/scrape", {
@@ -228,15 +239,21 @@ export default function TrainingPage() {
       const result = await res.json();
       if (result.error) throw new Error(result.error);
 
-      // Append to active section or 'about'
+      setScrapeProgress(100);
       const currentVal = data[activeSection] || "";
       const newVal = `${currentVal}\n\n--- Source: ${urlInput} ---\n${result.content}`;
       handleChange(activeSection, newVal);
-      setStatus("idle");
-      setUrlInput("");
+      
+      setTimeout(() => {
+        setStatus("idle");
+        setUrlInput("");
+        setScrapeProgress(0);
+      }, 500);
     } catch (err: unknown) {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      clearInterval(interval);
     }
   };
 
@@ -266,6 +283,13 @@ export default function TrainingPage() {
     }
   };
 
+  const handleClearSection = () => {
+    const confirmed = window.confirm("Are you sure? This cannot be undone.");
+    if (confirmed) {
+      handleChange(activeSection, "");
+    }
+  };
+
   const handleTest = async () => {
     if (!testInput.trim() || !tenantId) return;
     setStatus("testing");
@@ -292,6 +316,14 @@ export default function TrainingPage() {
 
   const totalChars = Object.values(data).join("").length;
   const activeS = SECTIONS.find((s) => s.id === activeSection)!;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 font-outfit pb-20">
@@ -390,29 +422,45 @@ export default function TrainingPage() {
             </div>
 
             {importType === "website" ? (
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
-                  <input 
-                    type="url"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    placeholder="https://yourbusiness.com/about"
-                    className="w-full bg-zinc-950/50 border border-zinc-800/50 rounded-2xl pl-12 pr-6 py-4 text-white focus:outline-none focus:border-orange-500/30 transition-colors"
-                  />
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                    <input 
+                      type="url"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      placeholder="https://yourbusiness.com/about"
+                      className="w-full bg-zinc-950/50 border border-zinc-800/50 rounded-2xl pl-12 pr-6 py-4 text-white focus:outline-none focus:border-orange-500/30 transition-colors"
+                    />
+                  </div>
+                  <button 
+                    onClick={handleWebsiteImport}
+                    disabled={status === "importing" || !urlInput.trim()}
+                    className="bg-zinc-100 hover:bg-white text-zinc-900 px-8 py-4 rounded-2xl font-black transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
+                  >
+                    {status === "importing" && importType === "website" ? (
+                      <div className="w-4 h-4 border-2 border-zinc-900/20 border-t-zinc-900 rounded-full animate-spin" />
+                    ) : (
+                      <LinkIcon size={18} />
+                    )}
+                    <span>Fetch Content</span>
+                  </button>
                 </div>
-                <button 
-                  onClick={handleWebsiteImport}
-                  disabled={status === "importing" || !urlInput.trim()}
-                  className="bg-zinc-100 hover:bg-white text-zinc-900 px-8 py-4 rounded-2xl font-black transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
-                >
-                  {status === "importing" && importType === "website" ? (
-                    <div className="w-4 h-4 border-2 border-zinc-900/20 border-t-zinc-900 rounded-full animate-spin" />
-                  ) : (
-                    <LinkIcon size={18} />
-                  )}
-                  <span>Fetch Content</span>
-                </button>
+                {status === "importing" && importType === "website" && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-black text-orange-500 uppercase tracking-widest">
+                      <span>Scraping URL...</span>
+                      <span>{scrapeProgress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-orange-500 transition-all duration-300" 
+                        style={{ width: `${scrapeProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="relative group">
@@ -431,8 +479,12 @@ export default function TrainingPage() {
                     )}
                   </div>
                   <div className="text-center">
-                    <p className="text-white font-bold text-sm">Upload PDF Brochure</p>
-                    <p className="text-zinc-600 text-[11px] font-medium mt-1 uppercase tracking-widest">Max size 10MB · Price lists, menu, or details</p>
+                    <p className="text-white font-bold text-sm">
+                      {status === "importing" && importType === "pdf" ? "Processing..." : "Upload PDF Brochure"}
+                    </p>
+                    <p className="text-zinc-600 text-[11px] font-medium mt-1 uppercase tracking-widest">
+                      {status === "importing" && importType === "pdf" ? "This may take a moment" : "Max size 10MB · Price lists, menu, or details"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -449,8 +501,17 @@ export default function TrainingPage() {
                   <p className="text-sm text-zinc-500 font-medium">{activeS.hint}</p>
                 </div>
               </div>
-              <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest bg-zinc-950/50 px-3 py-1.5 rounded-lg border border-zinc-800/50">
-                {charCounts[activeSection]?.toLocaleString() || 0} chars
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={handleClearSection}
+                  className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                  title="Clear Section"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest bg-zinc-950/50 px-3 py-1.5 rounded-lg border border-zinc-800/50">
+                  {charCounts[activeSection]?.toLocaleString() || 0} chars
+                </div>
               </div>
             </div>
 

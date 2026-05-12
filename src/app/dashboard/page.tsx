@@ -12,7 +12,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, Users, MessageSquare, Zap } from 'lucide-react';
+import { TrendingUp, Users, MessageSquare, Zap, BarChart3 } from 'lucide-react';
 
 interface TenantStats {
   id: string;
@@ -43,7 +43,6 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   
   const chartsRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -55,13 +54,13 @@ export default function Dashboard() {
         const tenantData = await tenantRes.json();
         setStats(tenantData);
         
-        Promise.all([
+        const [analyticsJson, conversationsJson] = await Promise.all([
           fetch(`/api/analytics?tenantId=${tenantData.id}`).then(r => r.json()),
           fetch(`/api/conversations?tenantId=${tenantData.id}`).then(r => r.json())
-        ]).then(([analyticsJson, conversationsJson]) => {
-          setAnalytics(analyticsJson.data || []);
-          setConversations(conversationsJson.data || []);
-        }).catch(err => console.error("Parallel fetch failed:", err));
+        ]);
+        
+        setAnalytics(analyticsJson.data || []);
+        setConversations(conversationsJson.data || []);
 
       } catch (err) {
         console.error("Dashboard data fetch error:", err);
@@ -77,23 +76,9 @@ export default function Dashboard() {
     chartsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const usagePercent = stats ? Math.round((stats.monthly_message_count / stats.monthly_message_limit) * 100) : 0;
 
-  const usagePercent = Math.round(((stats?.monthly_message_count || 0) / (stats?.monthly_message_limit || 50)) * 100);
-
-  if (!stats) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
@@ -127,6 +112,35 @@ export default function Dashboard() {
 
       <div className="h-px bg-zinc-800/30 w-full"></div>
 
+      {/* Live Chatbot Test Panel - Moved to Top for Better UX */}
+      <div className="space-y-4 animate-in slide-in-from-top-4 duration-1000">
+        <div className="flex items-center space-x-2 ml-2">
+          <span className="text-xl animate-bounce">👇</span>
+          <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Try your AI assistant below</p>
+        </div>
+        {stats?.id && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <ChatTestPanel 
+                tenantId={stats.id} 
+                businessName={stats.business_name} 
+                setConversations={setConversations}
+              />
+            </div>
+            <div className="hidden lg:block bg-orange-500/5 border border-orange-500/10 rounded-[2.5rem] p-8 flex flex-col justify-center text-center space-y-4">
+              <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center text-3xl mx-auto border border-orange-500/20">💡</div>
+              <h4 className="text-lg font-black text-white">Pro Tip</h4>
+              <p className="text-sm text-zinc-500 leading-relaxed">
+                Test your bot here to see how it handles your business context. 
+                You can update its knowledge anytime in the 
+                <Link href="/dashboard/training" className="text-orange-500 hover:underline mx-1">AI Training</Link> 
+                section.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard 
@@ -148,82 +162,79 @@ export default function Dashboard() {
           valueClassName="text-orange-500"
           icon={<TrendingUp className="text-orange-500" size={16} />}
         />
-        <StatCard 
-          label="BOT PERFORMANCE" 
-          value="99.2%" 
-          subtext="Uptime & Accuracy"
-          valueClassName="text-emerald-500"
-          icon={<Zap className="text-emerald-500" size={16} />}
-        />
+        {conversations.length > 0 && (
+          <StatCard 
+            label="BOT ACCURACY" 
+            value="Calculated" 
+            subtext="Based on last 50 chats"
+            valueClassName="text-emerald-500 text-xl"
+            icon={<Zap className="text-emerald-500" size={16} />}
+          />
+        )}
       </div>
 
-      {/* Analytics & Live Test Panel */}
-      <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 scroll-mt-10">
-        <div className="lg:col-span-2 bg-zinc-900/30 border border-zinc-800/50 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 space-y-6 md:space-y-8 h-full">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-white">Message Volume</h3>
-              <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest mt-1">Last 7 Days</p>
-            </div>
+      {/* Analytics */}
+      <div ref={chartsRef} className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 space-y-6 md:space-y-8 scroll-mt-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-white">Message Volume</h3>
+            <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest mt-1">Last 7 Days</p>
+          </div>
+          {analytics.length > 0 && (
             <div className="flex items-center space-x-2 bg-orange-500/10 px-3 py-1.5 rounded-xl border border-orange-500/20">
               <TrendingUp size={14} className="text-orange-500" />
               <span className="text-xs font-black text-orange-500">+12%</span>
             </div>
-          </div>
-
-          <div className="h-[350px] w-full">
-            {mounted && (
-              <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.length > 0 ? analytics : [
-                { date: '1 May', count: 4 },
-                { date: '2 May', count: 12 },
-                { date: '3 May', count: 8 },
-                { date: '4 May', count: 18 },
-                { date: '5 May', count: 15 },
-                { date: '6 May', count: 24 },
-                { date: '7 May', count: stats?.monthly_message_count || 0 },
-              ]}>
-                <defs>
-                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
-                  dy={10}
-                />
-                <YAxis hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}
-                  itemStyle={{ color: '#f97316', fontWeight: 800, fontSize: '12px' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#f97316" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorCount)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Live Chatbot Test Panel */}
-        {stats?.id && (
-          <ChatTestPanel 
-            tenantId={stats.id} 
-            businessName={stats.business_name} 
-            setConversations={setConversations}
-          />
-        )}
+        <div className="h-[350px] w-full flex items-center justify-center">
+          {mounted && (
+            analytics.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+                    dy={10}
+                  />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}
+                    itemStyle={{ color: '#f97316', fontWeight: 800, fontSize: '12px' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#f97316" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorCount)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-zinc-600 space-y-4">
+                <div className="p-6 bg-zinc-800/30 rounded-3xl">
+                  <BarChart3 size={40} className="opacity-20" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-sm uppercase tracking-widest text-zinc-500">No Analytics Yet</p>
+                  <p className="text-xs text-zinc-600 mt-1">Start a conversation to see data here.</p>
+                </div>
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -292,6 +303,32 @@ export default function Dashboard() {
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-4 w-full max-w-xl">
+          <div className="h-3 w-24 bg-zinc-800 rounded-full"></div>
+          <div className="h-20 w-full bg-zinc-800 rounded-3xl"></div>
+        </div>
+        <div className="flex gap-3">
+          <div className="h-14 w-32 bg-zinc-800 rounded-2xl"></div>
+          <div className="h-14 w-32 bg-zinc-800 rounded-2xl"></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-44 bg-zinc-800/50 rounded-[2.5rem]"></div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 h-[450px] bg-zinc-800/30 rounded-[2.5rem]"></div>
+        <div className="h-[450px] bg-zinc-800/30 rounded-[2.5rem]"></div>
+      </div>
+    </div>
+  );
+}
+
 function ChatTestPanel({ 
   tenantId, 
   businessName, 
@@ -330,7 +367,7 @@ function ChatTestPanel({
           message: userMessage,
           tenantId,
           history: messages,
-          preview: true // Doesn't count towards quota
+          preview: true 
         })
       });
 
@@ -338,7 +375,6 @@ function ChatTestPanel({
       if (data.reply) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
         
-        // Refresh conversations list in the parent
         fetch(`/api/conversations?tenantId=${tenantId}`)
           .then(res => res.json())
           .then(json => setConversations(json.data || []))
@@ -440,7 +476,7 @@ function ConversationItem({ id, query, meta }: { id: string, query: string, meta
         <span className="text-xl">💬</span>
       </div>
       <div className="space-y-1">
-        <p className="text-lg font-medium text-zinc-100 leading-tight">{query}</p>
+        <p className="text-lg font-medium text-zinc-100 leading-tight truncate max-w-[200px] sm:max-w-none">{query}</p>
         <p className="text-sm text-zinc-500 font-medium">{meta}</p>
       </div>
     </Link>

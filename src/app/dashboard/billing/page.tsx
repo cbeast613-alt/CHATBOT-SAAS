@@ -1,33 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function BillingPage() {
   const router = useRouter();
-  const [plan, setPlan] = useState("Growth");
+  const [plan, setPlan] = useState("Starter");
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchPlan() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data } = await supabase
-        .from("tenants")
-        .select("plan")
-        .eq("id", session.user.id)
-        .single();
-      if (data) {
-        setPlan(data.plan.charAt(0).toUpperCase() + data.plan.slice(1));
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        
+        const res = await fetch("/api/tenant/me");
+        if (!res.ok) throw new Error("Failed to fetch plan");
+        const data = await res.json();
+        
+        if (data) {
+          setPlan(data.plan.charAt(0).toUpperCase() + data.plan.slice(1));
+        }
+      } catch (err) {
+        console.error("Billing fetch error:", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchPlan();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">

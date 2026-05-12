@@ -47,11 +47,12 @@ export async function POST(request: Request) {
     // Verify tenant exists
     const { data: tenant, error } = await supabase
       .from("tenants")
-      .select("id, name, email")
-      .eq("id", tenantId)
+      .select("id, business_name, email")
+      .eq("user_id", tenantId)
       .single();
 
     if (error || !tenant) {
+      console.error("Tenant fetch error:", error);
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
@@ -61,9 +62,9 @@ export async function POST(request: Request) {
     const order = await razorpay.orders.create({
       amount: plan.amountPaise,   // in paise (₹99 = 9900)
       currency: "INR",
-      receipt: `receipt_${tenantId}_${Date.now()}`,
+      receipt: `receipt_${tenant.id}_${Date.now()}`,
       notes: {
-        tenantId,
+        tenantId: tenant.id,
         planId,
         tenantEmail: tenant.email,
       },
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
       amount: order.amount,
       currency: order.currency,
       planName: plan.name,
-      tenantName: tenant.name,
+      tenantName: tenant.business_name,
       tenantEmail: tenant.email,
     });
   } catch (err: unknown) {

@@ -80,7 +80,7 @@ export default function PricingPage() {
       const { data } = await supabase
         .from("tenants")
         .select("plan")
-        .eq("id", session.user.id)
+        .eq("user_id", session.user.id)
         .single();
       if (data) setCurrentPlan(data.plan as PlanId);
     });

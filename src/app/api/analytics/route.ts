@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     if (!supabase) return NextResponse.json({ error: "Config missing" }, { status: 500 });
 
     // Fetch message counts grouped by day for the last 7 days
-    const { data, error } = await supabase.rpc<DailyMessageStat[]>("get_daily_message_stats", {
+    const { data, error } = await supabase.rpc("get_daily_message_stats", {
       tenant_id_input: tenantId,
       days_limit: 7
     });
@@ -40,8 +40,8 @@ export async function GET(request: Request) {
       });
     }
 
-    const stats = data ?? [];
-    const totalMessages = stats.reduce((acc, curr) => acc + (curr?.count ?? 0), 0);
+    const stats = data ?? [] as DailyMessageStat[];
+    const totalMessages = stats.reduce((acc: number, curr: DailyMessageStat) => acc + (curr?.count ?? 0), 0);
 
     return NextResponse.json({
       data: stats,

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const selectedPlan = PLAN_LIMITS[plan] ? plan : "starter";
-    const selectedLimit = typeof messageLimit === "number" && messageLimit > 0
+    const messageQueryLimit = typeof messageLimit === "number" && messageLimit > 0
       ? messageLimit
       : PLAN_LIMITS[selectedPlan];
 
@@ -54,8 +54,8 @@ export async function POST(request: Request) {
       plan: plan,
       is_active: true,
       monthly_message_count: 0,
-      monthly_message_limit: messageLimit,
-      messages_limit: messageLimit,
+      monthly_message_limit: messageQueryLimit,
+      messages_limit: messageQueryLimit,
       plan_status: "active",
       subscription_status: "trial",
       plan_started_at: new Date().toISOString(),

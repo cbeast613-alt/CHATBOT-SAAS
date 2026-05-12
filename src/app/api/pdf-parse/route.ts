@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 export async function POST(request: Request) {
   try {
@@ -13,19 +13,20 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const data = await pdfParse(buffer);
-    
-    const content = data.text
+    const pdfParser = new PDFParse({ data: buffer });
+    const textResult = await pdfParser.getText();
+    const infoResult = await pdfParser.getInfo();
+
+    const content = textResult.text
       .replace(/\s+/g, " ")
       .trim();
 
-    // Limit content size
     const truncatedContent = content.substring(0, 5000);
 
     return NextResponse.json({
       content: truncatedContent,
-      pages: data.numpages,
-      info: data.info,
+      pages: textResult.total,
+      info: infoResult,
     });
 
   } catch (error: unknown) {

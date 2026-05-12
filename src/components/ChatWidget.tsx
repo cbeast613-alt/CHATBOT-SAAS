@@ -25,10 +25,14 @@ export default function ChatWidget({
   isPreview = false,
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window !== "undefined" && isPreview && window.location.pathname.includes("/dashboard")) {
+    if (typeof window === "undefined") return false;
+    // Never auto-open on mobile (< 768px)
+    if (window.innerWidth < 768) return false;
+    // Auto-open in dashboard preview
+    if (isPreview && window.location.pathname.includes("/dashboard")) {
       return true;
     }
-    return isPreview;
+    return false; // Always start closed for preview
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -338,13 +342,16 @@ export default function ChatWidget({
           <div
             style={{
               textAlign: "center",
-              fontSize: "11px",
-              color: "#bbb",
-              padding: "6px",
+              fontSize: "10px",
+              color: "#94a3b8",
+              padding: "10px",
               background: "#fff",
+              borderTop: "1px solid #f1f5f9",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
             }}
           >
-            Powered by ChatBot SaaS
+            POWERED BY <span style={{ color: primaryColor, fontWeight: 900 }}>CHATBOT SAAS</span>
           </div>
         </div>
       )}
