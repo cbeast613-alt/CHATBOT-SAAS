@@ -81,7 +81,7 @@ export default function Dashboard() {
   if (loading) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-6 animate-in fade-in duration-700 pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="min-w-0">
@@ -110,16 +110,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="h-px bg-zinc-800/30 w-full"></div>
-
-      {/* Live Chatbot Test Panel - Moved to Top for Better UX */}
+      {/* Live Chatbot Test Panel - TOP SECTION */}
       <div className="space-y-4 animate-in slide-in-from-top-4 duration-1000">
-        <div className="flex items-center space-x-2 ml-2">
-          <span className="text-xl animate-bounce">👇</span>
-          <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Try your AI assistant below</p>
+        <div className="flex items-center space-x-3 px-6 py-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl w-fit">
+          <span className="text-lg">💡</span>
+          <p className="text-sm font-bold text-orange-400">Try your AI assistant below — test before sharing with customers</p>
         </div>
         {stats?.id && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <ChatTestPanel 
                 tenantId={stats.id} 
@@ -127,22 +125,26 @@ export default function Dashboard() {
                 setConversations={setConversations}
               />
             </div>
-            <div className="hidden lg:block bg-orange-500/5 border border-orange-500/10 rounded-[2.5rem] p-8 flex flex-col justify-center text-center space-y-4">
-              <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center text-3xl mx-auto border border-orange-500/20">💡</div>
-              <h4 className="text-lg font-black text-white">Pro Tip</h4>
-              <p className="text-sm text-zinc-500 leading-relaxed">
-                Test your bot here to see how it handles your business context. 
-                You can update its knowledge anytime in the 
-                <Link href="/dashboard/training" className="text-orange-500 hover:underline mx-1">AI Training</Link> 
-                section.
+            <div className="hidden lg:flex bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 flex-col justify-center text-center space-y-4">
+              <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center text-3xl mx-auto border border-orange-500/20 shadow-xl shadow-orange-500/5">🤖</div>
+              <h4 className="text-xl font-black text-white tracking-tight">AI Training</h4>
+              <p className="text-sm text-zinc-500 leading-relaxed font-medium">
+                Your assistant learns from the documents and URLs you provide. 
+                Keep it smart by updating your knowledge base.
               </p>
+              <Link 
+                href="/dashboard/training" 
+                className="mt-2 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-widest border border-zinc-700/50"
+              >
+                Train Assistant
+              </Link>
             </div>
           </div>
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* Stats Grid - 3 Columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard 
           label="MONTHLY MESSAGES" 
           value={stats?.monthly_message_count?.toLocaleString() || "0"} 
@@ -162,28 +164,19 @@ export default function Dashboard() {
           valueClassName="text-orange-500"
           icon={<TrendingUp className="text-orange-500" size={16} />}
         />
-        {conversations.length > 0 && (
-          <StatCard 
-            label="BOT ACCURACY" 
-            value="Calculated" 
-            subtext="Based on last 50 chats"
-            valueClassName="text-emerald-500 text-xl"
-            icon={<Zap className="text-emerald-500" size={16} />}
-          />
-        )}
       </div>
 
       {/* Analytics */}
-      <div ref={chartsRef} className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 space-y-6 md:space-y-8 scroll-mt-10">
+      <div ref={chartsRef} className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-6 md:p-10 space-y-8 scroll-mt-10">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-white">Message Volume</h3>
-            <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest mt-1">Last 7 Days</p>
+            <h3 className="text-xl font-bold text-white tracking-tight">Message Volume</h3>
+            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] mt-2">7-Day Engagement Trend</p>
           </div>
           {analytics.length > 0 && (
-            <div className="flex items-center space-x-2 bg-orange-500/10 px-3 py-1.5 rounded-xl border border-orange-500/20">
+            <div className="flex items-center space-x-2 bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-500/20 shadow-lg shadow-orange-500/5">
               <TrendingUp size={14} className="text-orange-500" />
-              <span className="text-xs font-black text-orange-500">+12%</span>
+              <span className="text-xs font-black text-orange-500">+12% growth</span>
             </div>
           )}
         </div>
@@ -204,32 +197,32 @@ export default function Dashboard() {
                     dataKey="date" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+                    tick={{ fill: '#52525b', fontSize: 10, fontWeight: 700 }}
                     dy={10}
                   />
                   <YAxis hide />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}
+                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
                     itemStyle={{ color: '#f97316', fontWeight: 800, fontSize: '12px' }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="count" 
                     stroke="#f97316" 
-                    strokeWidth={3}
+                    strokeWidth={4}
                     fillOpacity={1} 
                     fill="url(#colorCount)" 
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center text-zinc-600 space-y-4">
-                <div className="p-6 bg-zinc-800/30 rounded-3xl">
-                  <BarChart3 size={40} className="opacity-20" />
+              <div className="flex flex-col items-center justify-center text-zinc-600 space-y-6 py-20 bg-zinc-950/20 rounded-[2.5rem] w-full border border-zinc-800/20">
+                <div className="p-8 bg-zinc-800/30 rounded-[2rem] border border-zinc-800/50 shadow-inner">
+                  <BarChart3 size={48} className="opacity-10" />
                 </div>
-                <div className="text-center">
-                  <p className="font-bold text-sm uppercase tracking-widest text-zinc-500">No Analytics Yet</p>
-                  <p className="text-xs text-zinc-600 mt-1">Start a conversation to see data here.</p>
+                <div className="text-center space-y-1">
+                  <p className="font-black text-xs uppercase tracking-[0.2em] text-zinc-500">Analytics Loading</p>
+                  <p className="text-xs text-zinc-600 font-medium italic">Data will appear once your bot handles messages.</p>
                 </div>
               </div>
             )
@@ -237,52 +230,61 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Bottom Grid - 2 Columns Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Usage Progress */}
-        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 flex flex-col justify-between h-full">
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-white">Quota Status</h3>
+        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between h-full hover:bg-zinc-900/50 transition-all group">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white tracking-tight">Quota Status</h3>
+              <div className="bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700/30">
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{stats?.plan || 'trial'}</span>
+              </div>
+            </div>
             
-            <div className="relative flex items-center justify-center h-48">
+            <div className="relative flex items-center justify-center h-56">
               <svg className="w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-zinc-800" />
+                <circle cx="50%" cy="50%" r="85" stroke="currentColor" strokeWidth="16" fill="transparent" className="text-zinc-800/50" />
                 <circle
-                  cx="50%" cy="50%" r="70" stroke="currentColor" strokeWidth="12" fill="transparent"
-                  strokeDasharray={`${(usagePercent / 100) * 440} 440`}
+                  cx="50%" cy="50%" r="85" stroke="currentColor" strokeWidth="16" fill="transparent"
+                  strokeDasharray={`${(usagePercent / 100) * 534} 534`}
                   strokeLinecap="round"
-                  className="text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                  className="text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-1000 ease-out"
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-4xl font-black text-white">{usagePercent}%</span>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Used</span>
+                <span className="text-5xl font-black text-white tracking-tighter">{usagePercent}%</span>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-2">Consumed</span>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm font-medium">
-                <span className="text-zinc-500">{stats?.monthly_message_count?.toLocaleString() || "0"} used</span>
-                <span className="text-zinc-500">{(stats?.monthly_message_limit || 50) - (stats?.monthly_message_count || 0)} remaining</span>
+            <div className="space-y-5 bg-black/20 p-6 rounded-3xl border border-zinc-800/30">
+              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                <span className="text-zinc-500">{stats?.monthly_message_count?.toLocaleString() || "0"} USED</span>
+                <span className="text-zinc-400">{(stats?.monthly_message_limit || 50) - (stats?.monthly_message_count || 0)} FREE LEFT</span>
               </div>
-              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-500 rounded-full" style={{ width: `${usagePercent}%` }}></div>
+              <div className="h-2 w-full bg-zinc-800/50 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${usagePercent}%` }}></div>
               </div>
             </div>
           </div>
           <Link 
             href="/dashboard/billing"
-            className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-bold transition-all uppercase tracking-widest mt-8 text-center"
+            className="w-full py-5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-black transition-all uppercase tracking-[0.2em] mt-10 text-center border border-zinc-700/50 group-hover:bg-orange-500 group-hover:border-orange-400/50 duration-300"
           >
-            Manage Quota
+            Upgrade Capacity
           </Link>
         </div>
 
         {/* Recent Conversations */}
-        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 space-y-6 h-full">
-          <h3 className="text-lg font-bold text-white">Recent Activity</h3>
+        <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-[2.5rem] p-8 md:p-10 space-y-8 h-full hover:bg-zinc-900/50 transition-all">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white tracking-tight">Recent Activity</h3>
+            <Link href="/dashboard/conversations" className="text-xs font-bold text-orange-500 hover:underline">View All</Link>
+          </div>
           <div className="space-y-4">
             {conversations.length > 0 ? (
-              conversations.map((conv, i) => (
+              conversations.slice(0, 4).map((conv, i) => (
                 <ConversationItem 
                   key={i}
                   id={conv.id}
@@ -291,9 +293,12 @@ export default function Dashboard() {
                 />
               ))
             ) : (
-              <div className="py-10 text-center space-y-3">
-                <div className="text-4xl">📭</div>
-                <p className="text-sm font-bold text-zinc-500">No activity yet. Start a test chat!</p>
+              <div className="py-20 text-center space-y-4 bg-zinc-950/20 rounded-[2.5rem] border border-zinc-800/20">
+                <div className="text-5xl opacity-20">📭</div>
+                <div className="space-y-1">
+                  <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">Inbox is Empty</p>
+                  <p className="text-[10px] text-zinc-600 font-medium">Try chatting with your bot in the test panel above.</p>
+                </div>
               </div>
             )}
           </div>

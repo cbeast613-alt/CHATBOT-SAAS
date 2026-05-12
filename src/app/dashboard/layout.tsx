@@ -1,9 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { 
+  LayoutDashboard, 
+  MessageSquare, 
+  Brain, 
+  Palette, 
+  CreditCard, 
+  LogOut,
+  ChevronRight
+} from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -50,11 +55,11 @@ export default function DashboardLayout({
   };
 
   const menuItems = [
-    { name: "Overview", icon: "📊", href: "/dashboard" },
-    { name: "Conversations", icon: "💬", href: "/dashboard/conversations" },
-    { name: "AI Training", icon: "🧠", href: "/dashboard/training" },
-    { name: "Widget", icon: "🎨", href: "/dashboard/widget" },
-    { name: "Billing", icon: "💳", href: "/dashboard/billing" },
+    { name: "Overview", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
+    { name: "Conversations", icon: <MessageSquare size={20} />, href: "/dashboard/conversations" },
+    { name: "AI Training", icon: <Brain size={20} />, href: "/dashboard/training" },
+    { name: "Widget", icon: <Palette size={20} />, href: "/dashboard/widget" },
+    { name: "Billing", icon: <CreditCard size={20} />, href: "/dashboard/billing" },
   ];
 
   const SidebarContent = () => (
@@ -93,7 +98,7 @@ export default function DashboardLayout({
                   : "text-zinc-500 hover:bg-zinc-900/50 hover:text-zinc-300"
               }`}
             >
-              <span className={`text-xl ${isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100 transition-opacity"}`}>
+              <span className={`${isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300 transition-colors"}`}>
                 {item.icon}
               </span>
               <span className="tracking-tight">{item.name}</span>
@@ -109,18 +114,19 @@ export default function DashboardLayout({
             <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">{plan} plan</p>
           </div>
           <Link
-            href="/pricing"
+            href="/dashboard/billing"
             className="text-xs font-bold text-zinc-400 hover:text-white transition-colors flex items-center space-x-1"
           >
             <span>Upgrade Access</span>
-            <span>→</span>
+            <ChevronRight size={12} />
           </Link>
         </div>
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center space-x-3 py-4 text-zinc-600 hover:text-red-400 transition-all text-xs font-black uppercase tracking-widest"
+          className="w-full flex items-center justify-center space-x-3 py-4 text-zinc-400 hover:text-red-400 transition-all text-xs font-black uppercase tracking-widest bg-zinc-900/30 rounded-2xl border border-zinc-800/50 hover:border-red-400/30"
         >
+          <LogOut size={16} />
           <span>Sign out</span>
         </button>
       </div>
