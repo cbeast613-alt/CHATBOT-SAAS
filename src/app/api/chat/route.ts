@@ -178,10 +178,12 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown error";
 
     // --- Multi-model fallback chain ---
+    // Updated for May 2026 model inventory
     const MODELS_TO_TRY = [
-      "gemini-1.5-flash",
-      "gemini-1.5-pro",
-      "gemini-pro",
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash",
+      "gemini-flash-latest",
     ];
 
     let responseText = "";
@@ -189,7 +191,7 @@ export async function POST(request: Request) {
 
     for (const modelName of MODELS_TO_TRY) {
       try {
-        console.log(`Attempting chat with model: ${modelName}`);
+        console.log(`[Chat API] Attempting model: ${modelName}`);
         const model = genAI.getGenerativeModel({
           model: modelName,
           systemInstruction: systemPrompt,
@@ -203,15 +205,15 @@ export async function POST(request: Request) {
         const chat = model.startChat({ history: chatHistory });
         const result = await chat.sendMessage(message.trim());
         responseText = result.response.text();
-        console.log(`Chat API success using model ${modelName}`);
-        break; // success — stop trying more models
+        console.log(`[Chat API] Success with model: ${modelName}`);
+        break; // success
       } catch (err: unknown) {
         lastError = err;
         const errorMessage = getErrorMessage(err);
-        console.error(`Chat API model ${modelName} failed:`, errorMessage);
+        console.error(`[Chat API] Model ${modelName} failed:`, errorMessage);
         
-        // If it's a safety error or invalid argument, don't retry other models
-        if (errorMessage.includes("SAFETY") || errorMessage.includes("INVALID_ARGUMENT")) {
+        // Non-retryable errors
+        if (errorMessage.includes("SAFETY") || errorMessage.includes("INVALID_ARGUMENT") || errorMessage.includes("permission")) {
           throw err;
         }
         
